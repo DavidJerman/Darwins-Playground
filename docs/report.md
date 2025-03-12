@@ -33,3 +33,41 @@ različni parametri vplivajo na evolucijski proces.
 3. Naravna selekcija,
 4. Simulacija prilagajanja,
 5. Optimizacija strategij.
+
+## Evaluacija problema
+
+Sledeča dela so bila v pomoč pri načrtovanju evaluacije rešitve:
+
+1. [Holland, J. H. (1975). "Adaptation in Natural and Artificial Systems"](http://repo.darmajaya.ac.id/3794/1/Adaptation%20in%20Natural%20and%20Artificial%20Systems_%20An%20Introductory%20Analysis%20with%20Applications%20to%20Biology%2C%20Control%2C%20and%20Artificial%20Intelligence%20%28A%20Bradford%20Book%29%20%28%20PDFDrive%20%29.pdf),
+2. Mitchell, M. (1996). "An Introduction to Genetic Algorithms",
+3. Wooldridge, M. (2002). "An Introduction to MultiAgent Systems",
+4. Galanter, E., & Ginsberg, A. (2011). "Self-Organizing Systems: Theory and Applications".
+
+...
+
+## Načrt rešitve
+
+### Informacije o skupini
+
+Izbrana projektna skupina je skupina št. 4.
+
+Na tem projektu pa delava sledeča študenta: 
+
+- David Jerman,
+- Andraž Škof.
+
+### Tehnične informacije o projektu
+
+Projekt je dostopen na spletni strani GitHub in sicer na sledečem naslovu:
+[Darwin's Playground](https://github.com/DavidJerman/Darwins-Playground).
+
+Poglaviten programski jezik izbran za izvedbo tega projekta je `Python`, ki pa se bo kombiniral
+z raznimi programskimi knjižnicami, ki bodo omogočile lažji razvoj končne rešitve.
+
+### Iterativen razvoj projekta
+
+...
+
+### Opis rešitve
+
+...
