@@ -65,7 +65,7 @@ Problemi iz realnega sveta, ki so primerljivi s to nalogo so:
   in evolucijske strategije za preživetje,
 - nadzorovanje naravnih virov v simulacijah, kot so sistemi za upravljanje z vodo, energijo ali gozdovi, kjer
   različni agenti (npr. podjetja, skupnosti, države) sprejemajo odločitve, ki vplivajo na okolje in druge akterje,
-- robotika in avtonomni sistemi, kjer roboti sodelujejo in tekmujejo za vire v dinamičnem okolju, kot so pri reševanju 
+- robotika in avtonomni sistemi, kjer roboti sodelujejo in tekmujejo za vire v dinamičnem okolju, kot so pri reševanju
   nalog v nesrečah ali za iskanje virov na težko dostopnih območjih ...
 
 ### Ključne besede
@@ -97,7 +97,7 @@ Glavna prednost teh metod v primerjavi z osnovnimi metodami učenja s krepitvijo
 za doseg cilja. Agenti lahko na podlagi lokalnega znanja in izmenjave informacij pridejo do konsenza in
 sprejemajo boljše odločitve, ki bodo vodile v bolj uspešno raziskovanje okolja.
 
-V večagentskem ojačitvenem učenju je ključen izziv prilagajanje dejanj posameznega agenta dinamičnemu okolju 
+V večagentskem ojačitvenem učenju je ključen izziv prilagajanje dejanj posameznega agenta dinamičnemu okolju
 izboljšanje celotne učinkovitosti sistema. Večina algoritmov predpostavlja, da agent pozna strukturo igre ali
 Nashovo ravnotežje ter da ima informacije o dejanjih in nagradah drugih agentov. Ker nagrade temeljijo tako na
 lastnih kot na dejanjih sodelujočih agentov, lahko MDP model ojačitvenega učenja obravnavamo kot večagentsko
@@ -111,7 +111,8 @@ optimalnih poti iz izkušenj, ki jih lahko agenti ali skupine delijo za hitrejš
 
 ### Kolaborativno več-agentno učenje s krepitvijo na osnovi propagacije izkušenj
 
-... TODO ... [5]
+Opisana optimizacijska metoda cikličnih poti omogoča izvleček optimalnih poti iz izkušenj, ki jih lahko agenti
+ali skupine delijo za hitrejšo konvergenco vrednostne funkcije [5].
 
 ### CTDE
 
@@ -126,7 +127,7 @@ nekaj znanja od ostalih agentov [4].
 ### DQN in DRQN
 
 DQN (Deep Q-network) je nadgradnja Q-učenja, ki za funkcijo aproksimacije uporablja nevronsko mrežo. Vendar
-pa ima DQN informacije o celotnem okolje, zato ta metoda ni relevantna za najin problem. 
+pa ima DQN informacije o celotnem okolje, zato ta metoda ni relevantna za najin problem.
 
 DRQN pa reši problem pomanjkljivih podatkov o okolju, saj omogoča delo z delnimi podatki. DRQN temelji na RNN
 modelu, katerega namen pa je, da hrani zgodovino vhodnih vrednosti in jo ponovno uporabi v prihodnjih
@@ -144,7 +145,7 @@ QMIX uporablja mixing network, ki zagotavlja monotono kombinacijo posameznih Q-f
 ki generirajo uteži. Med učenjem se omrežje trenira end-to-end, pri čemer se optimizira napaka med napovedano
 skupno Q-funkcijo in ciljno vrednostjo, ki temelji na diskontiranih prihodnjih nagradah. Metoda se dobro obnese
 v okoljih, kjer agenti lahko delujejo pretežno neodvisno, vendar ima omejitve pri nalogah, kjer je nujno
-usklajevanje med agenti.
+usklajevanje med agenti [4].
 
 ### HC-MARL
 
@@ -153,7 +154,7 @@ v okolju sprožijo takojšen, nizko-nivojski konsenz, medtem ko daljša opazovan
 visoko nivojski konsenz. Algoritem pa uporablja tudi mehanizem za prilagajanje pomembnosti vsakega nivoja, ki se
 spreminja skupaj z dinamičnim okoljem. Na ta način agenti bolj strateško sprejemajo odločitve, ki prinašajo
 takojšnjo nagrado in odločitve, ki nagrado prinašajo na dolgi rok. HC-MARL je posebej zanimiv za najin primer,
-saj omogoča agentom, da kombinirajo kratkoročne in dolgoročne strategije preživetja v dinamičnem okolju. [3]
+saj omogoča agentom, da kombinirajo kratkoročne in dolgoročne strategije preživetja v dinamičnem okolju [3].
 
 ## Načrt rešitve
 
@@ -172,11 +173,37 @@ Projekt je dostopen na spletni strani GitHub in sicer na sledečem naslovu:
 [Darwin's Playground](https://github.com/DavidJerman/Darwins-Playground).
 
 Poglaviten programski jezik izbran za izvedbo tega projekta je `Python`, ki pa se bo kombiniral
-z raznimi programskimi knjižnicami, ki bodo omogočile lažji razvoj končne rešitve.
+z raznimi programskimi knjižnicami, ki bodo omogočile lažji razvoj končne rešitve. Glavna knjižnica
+za implementacijo tega projekta bo `Ray` [7].
 
 ### Opis rešitve
 
-... TODO ...
+Najprej, ključno je definirati okolje: kje se nahaja hrana (npr. določene točke s hrano) in voda (morda določena
+območja ali točke). Agenti (živali) se bodo gibali po tem okolju, pri čemer bodo s pomočjo Q-learninga poskušali
+naučiti optimalne poti do hrane in vode.
+
+Postopek implementacije bi lahko sledil tem korakom:
+
+Stanja (States): Določimo stanja, ki predstavljajo različne lokacije v okolju. Vsako stanje bi lahko predstavljalo
+točko na zemljevidu, kjer je mogoče najti hrano ali vodo.
+
+Akcije (Actions): Vsaka žival lahko izvaja določene akcije, kot so premiki na sosednje točke v okolju.
+
+Nagrade (Rewards): Definiramo nagrade, ki jih agent prejme, ko pride do hrane ali vode. Na primer, pozitivna nagrada
+za dosego hrane ali vode, negativna za izgubo energije zaradi neuspešnega iskanja.
+
+Q-table: Zgradimo Q-table, ki hrani vrednosti Q(stanje, akcija) za vsako kombinacijo stanja in akcije. Ta tabela se
+posodablja glede na izkušnje agentov (živali) v okolju.
+
+Učenje (Learning): Agenti se premikajo po okolju, izvajajo akcije in posodabljajo vrednosti v Q-tabli na podlagi
+prejetih nagrad in izbranih akcij.
+
+Raziskovanje in izkoriščanje: Pomembno je najti ravnovesje med raziskovanjem novih poti (različne akcije) in
+izkoriščanjem naučenih informacij (npr. optimalne poti do hrane in vode).
+
+Nadgradnja Q-learninga, s tem, da se omogoči komunikacijo med agenti. Agent, ki že pozna del mape lahko ta del ob
+komunikaciji opiše drugemu agentu, ki se s tem to nauči. Nadgradnja bi temeljila na pristopu CTDE opisanem
+zgoraj.
 
 ### Iterativen razvoj projekta
 
@@ -201,7 +228,3 @@ z raznimi programskimi knjižnicami, ki bodo omogočile lažji razvoj končne re
 1. Optimizacija performance,
 2. Končno testiranje,
 3. Evaluacija različnih pristopov.
-
-### Opis rešitve z UML diagramom
-
-... Tule pride UML diagram ...
