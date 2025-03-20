@@ -23,7 +23,8 @@ agenta samega.
 
 Okolje bo predstavljeno s pomočjo dvodimenzionalne plošče, kjer bodo posamezni kvadratki predstavljali
 različne dele površja (voda, pesek, viri hrane itd.). Agenti bodo za premikanje po različnih ploščah
-porabili različno količino energije.
+porabili različno količino energije. Treba je poudariti tudi, da imajo agenti samo lokalno znanje, tj.
+poznajo samo polja, ki so jih že obiskali, ostala pa so jim nevidna.
 
 Okolje je dinamično in se lahko spreminja skozi čas. Lokacija, količina in uporabnost virov (voda, hrana)
 se lahko spreminjajo zaradi različnih zunanjih dejavnikov, kot so vremenske spremembe (npr. dež, suša, mrak)
@@ -72,7 +73,8 @@ Problemi iz realnega sveta, ki so primerljivi s to nalogo so:
 1. Večagentni sistemi,
 2. Simulacija prilagajanja,
 3. Optimizacija strategij,
-4. Q-Learning.
+4. Q-Learning,
+5. Učenje s krepitvijo.
 
 ## Evaluacija problema
 
@@ -83,11 +85,75 @@ Sledeča dela so bila v pomoč pri načrtovanju evaluacije rešitve:
 3. [Hierarchical Consensus-Based Multi-Agent Reinforcement Learning for Multi-Robot Cooperation Tasks](https://arxiv.org/html/2407.08164v2),
 4. [An Introduction to Centralized Training for Decentralized Execution in Cooperative Multi-Agent Reinforcement Learning](https://arxiv.org/pdf/2409.03052),
 5. [Collaborative multi-agent reinforcement learning based on experience propagation](https://ieeexplore.ieee.org/document/6587341),
-6. [https://ieeexplore.ieee.org/document/10041614](https://ieeexplore.ieee.org/document/10041614),
-7. [A Distributed Q-Learning Algorithm for Multi-Agent Team Coordination](https://ieeexplore.ieee.org/document/1526928),
-8. [Ray](https://docs.ray.io/en/latest/rllib/index.html).
+6. [A Distributed Q-Learning Algorithm for Multi-Agent Team Coordination](https://ieeexplore.ieee.org/document/1526928),
+7. [Ray](https://docs.ray.io/en/latest/rllib/index.html).
 
-... TODO ...
+Nekatere izmed metod, ki so bile opisane v člankih so sledeče:
+
+- HC-MARL (Hierarchical Consensus-based Multi-Agent Reinforcement Learning),
+- CTDE (Centralized Training Decentralized Execution),
+
+Glavna prednost teh metod v primerjavi z osnovnimi metodami učenja s krepitvijo je kooperacija različnih agentov
+za doseg cilja. Agenti lahko na podlagi lokalnega znanja in izmenjave informacij pridejo do konsenza in
+sprejemajo boljše odločitve, ki bodo vodile v bolj uspešno raziskovanje okolja.
+
+V večagentskem ojačitvenem učenju je ključen izziv prilagajanje dejanj posameznega agenta dinamičnemu okolju 
+izboljšanje celotne učinkovitosti sistema. Večina algoritmov predpostavlja, da agent pozna strukturo igre ali
+Nashovo ravnotežje ter da ima informacije o dejanjih in nagradah drugih agentov. Ker nagrade temeljijo tako na
+lastnih kot na dejanjih sodelujočih agentov, lahko MDP model ojačitvenega učenja obravnavamo kot večagentsko
+Markovljevo igro [5].
+
+Pri učenju agenti uporabljajo strategije raziskovanja, kot sta ε-greedy in Boltzmanova eksploracija, saj na
+začetku nimajo zadostnega znanja o okolju. Zaradi omejenih izkušenj pogosto večkrat obiščejo ista stanja, kar
+postane problematično v večjih prostorskih stanjih. Ključen izziv pri sodelovalnih večagentskih sistemih je
+omogočanje izmenjave znanja med agenti. Predlagana optimizacijska metoda cikličnih poti omogoča izvleček
+optimalnih poti iz izkušenj, ki jih lahko agenti ali skupine delijo za hitrejšo konvergenco vrednostne funkcije [5].
+
+### Kolaborativno več-agentno učenje s krepitvijo na osnovi propagacije izkušenj
+
+... TODO ... [5]
+
+### CTDE
+
+Metoda CTDE je splošna metoda, kjer učenje agentov poteka centralno – delitev znanja. Agenti pa akcije izvedejo
+neodvisno drug od drugega na podlagi svojih preteklih izkušenj. Agenti lahko v fazi učenja uporabijo informacije,
+ki jim med decentraliziranim izvajanjem niso bile na voljo.
+
+Nekateri tovrstni pristopi uporabljajo deljeno Q-funkcijo v času učenja. Izguba (loss) se tako za vsakega agenta
+v času učenja izračuna kot skupna Q-funkcija. Posledično imajo agenti tudi tekom decentraliziranega izvajanja
+nekaj znanja od ostalih agentov [4].
+
+### DQN in DRQN
+
+DQN (Deep Q-network) je nadgradnja Q-učenja, ki za funkcijo aproksimacije uporablja nevronsko mrežo. Vendar
+pa ima DQN informacije o celotnem okolje, zato ta metoda ni relevantna za najin problem. 
+
+DRQN pa reši problem pomanjkljivih podatkov o okolju, saj omogoča delo z delnimi podatki. DRQN temelji na RNN
+modelu, katerega namen pa je, da hrani zgodovino vhodnih vrednosti in jo ponovno uporabi v prihodnjih
+napovedih [4].
+
+### QMIX
+
+QMIX je metoda za večagentsko ojačitveno učenje, ki razširja VDN (Value Decomposition Networks) tako, da
+omogoča bolj splošne razgradnje vrednostnih funkcij. Namesto preproste vsote lokalnih Q-funkcij, QMIX modelira
+skupno Q-funkcijo kot monotono nelinearno funkcijo posameznih Q-funkcij agentov. To pomeni, da lahko agenti še
+vedno izbirajo akcije na podlagi svojih lokalnih Q-vrednosti, kar omogoča učinkovitejše usposabljanje in
+decentralizirano izvajanje.
+
+QMIX uporablja mixing network, ki zagotavlja monotono kombinacijo posameznih Q-funkcij s pomočjo hiperomrežij,
+ki generirajo uteži. Med učenjem se omrežje trenira end-to-end, pri čemer se optimizira napaka med napovedano
+skupno Q-funkcijo in ciljno vrednostjo, ki temelji na diskontiranih prihodnjih nagradah. Metoda se dobro obnese
+v okoljih, kjer agenti lahko delujejo pretežno neodvisno, vendar ima omejitve pri nalogah, kjer je nujno
+usklajevanje med agenti.
+
+### HC-MARL
+
+Metoda HC-MARL uporablja več slojev konsenza: konsenz na dolgi rok in konsenz na kratki rok. Kratka opazovanja
+v okolju sprožijo takojšen, nizko-nivojski konsenz, medtem ko daljša opazovanja okolja sprožijo bolj strateški,
+visoko nivojski konsenz. Algoritem pa uporablja tudi mehanizem za prilagajanje pomembnosti vsakega nivoja, ki se
+spreminja skupaj z dinamičnim okoljem. Na ta način agenti bolj strateško sprejemajo odločitve, ki prinašajo
+takojšnjo nagrado in odločitve, ki nagrado prinašajo na dolgi rok. HC-MARL je posebej zanimiv za najin primer,
+saj omogoča agentom, da kombinirajo kratkoročne in dolgoročne strategije preživetja v dinamičnem okolju. [3]
 
 ## Načrt rešitve
 
@@ -107,6 +173,10 @@ Projekt je dostopen na spletni strani GitHub in sicer na sledečem naslovu:
 
 Poglaviten programski jezik izbran za izvedbo tega projekta je `Python`, ki pa se bo kombiniral
 z raznimi programskimi knjižnicami, ki bodo omogočile lažji razvoj končne rešitve.
+
+### Opis rešitve
+
+... TODO ...
 
 ### Iterativen razvoj projekta
 
