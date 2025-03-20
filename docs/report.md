@@ -205,6 +205,27 @@ Nadgradnja Q-learninga, s tem, da se omogoči komunikacijo med agenti. Agent, ki
 komunikaciji opiše drugemu agentu, ki se s tem to nauči. Nadgradnja bi temeljila na pristopu CTDE opisanem
 zgoraj.
 
+### Evaluacija rešitve
+
+Uspešnost algoritma ocenjujemo z več ključnimi metrikami, ki merijo, kako dobro se agenti prilagajajo okolju ter
+kako hitro in učinkovito se učijo optimalnih strategij preživetja.
+
+1. Hitrost konvergence: Merimo, koliko epizod je potrebno, da agenti dosežejo stabilno strategijo gibanja do hrane in
+   vode. Hitrejša konvergenca pomeni bolj učinkovit učni proces.
+2. Povprečna pridobljena nagrada: Spremljamo povprečno nagrado agentov skozi iteracije. Višja povprečna nagrada pomeni,
+   da agenti bolje optimizirajo svoje poti in zmanjšujejo nepotrebno porabo energije.
+3. Delež uspešnih epizod: Izračunamo, kolikšen delež simulacij agenti uspešno zaključijo s pridobitvijo hrane in vode.
+   Višji delež uspešnih epizod nakazuje boljše prilagajanje algoritma.
+4. Dolžina poti do cilja: Merimo povprečno število korakov, ki jih agent potrebuje za dosego hrane ali vode. Krajše
+   poti pomenijo bolj optimalne strategije gibanja.
+5. Stopnja deljenja informacij: Ker agenti lahko med seboj delijo znanje, ocenjujemo, kako hitro in učinkovito se novo
+   pridobljene informacije prenašajo med agenti in kako to vpliva na učenje celotnega sistema.
+6. Robustnost algoritma: Preverjamo, kako dobro agenti prilagajajo svoje strategije v spreminjajočem se okolju, na
+   primer ob spreminjanju razpoložljivosti virov ali dodajanju novih agentov.
+
+Na podlagi teh metrik lahko primerjamo različne strategije in ocenimo, ali izboljšave, kot je deljenje informacij med
+agenti, dejansko prispevajo k hitrejšemu in boljšemu učenju.
+
 ### Iterativen razvoj projekta
 
 #### Iteracija 1: Osnovna struktura
