@@ -230,9 +230,8 @@ agenti, dejansko prispevajo k hitrejšemu in boljšemu učenju.
 
 #### Iteracija 1: Osnovna struktura
 
-1. Osnovna implementacija agentov in njihovih lastnosti,
-2. Osnovna implementacija statičnega okolja,
-3. Osnovno obnašanje agentov – gibanje, iskanje virov.
+1. Osnovna implementacija agentov in okolja ter njihovih lastnosti na podlagi [RLlib’s MultiAgentEnv API](https://docs.ray.io/en/latest/rllib/multi-agent-envs.html#rllib-multi-agent-environments-doc),
+2. Osnovna delovanje agentov – gibanje, iskanje virov.
 
 #### Iteracija 2: Povečanje kompleksnosti agentov in okolja
 
