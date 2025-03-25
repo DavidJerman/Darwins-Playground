@@ -1,5 +1,5 @@
 class Tile:
-    def __init__(self, terrain_type='grass', temperature=20, resources=0):
+    def __init__(self, terrain_type='sand', temperature=20, resources=0):
         self.terrain_type = terrain_type
         self.temperature = temperature
         self.resources = resources

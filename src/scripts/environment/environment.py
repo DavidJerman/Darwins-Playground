@@ -1,4 +1,4 @@
-from scripts.environment.tile import Tile
+from src.scripts.environment.tile import Tile
 
 import random
 import time
