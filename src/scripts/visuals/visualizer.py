@@ -4,15 +4,28 @@ import numpy as np
 
 class Visualizer:
     def __init__(self, mode='matplotlib'):
+        """
+        Initialize the visualizer
+
+        :param mode: console, matplotlib, pygame
+        """
         self.environment = None
         self.mode = mode
 
     def set_environment(self, environment):
+        """
+        Set the environment
+        """
         self.environment = environment
 
     def update(self):
+        """
+        Update the visual
+        """
         if self.environment is None:
             print("Environment is None")
+            return
+
         if self.mode == 'console':
             self._console_visualization()
         elif self.mode == 'matplotlib':
@@ -21,18 +34,31 @@ class Visualizer:
             self._pygame_visualization()
 
     def _console_visualization(self):
-        # Display a basic textual visualization of the environment
+        """
+        Console visualization
+        """
+        # Border
+        border_row = '#' * (self.environment.width * 2 + 3)
+        print(border_row)
+
+        # Loop through environment grid and display agents
         for y in range(self.environment.height):
-            row = ''
+            row = '# '
             for x in range(self.environment.width):
-                if any(agent['x'] == x and agent['y'] == y for agent in self.environment.agents.values()):
-                    row += 'A '  # Representing agents as 'A'
+                if any(agent.x == x and agent.y == y for agent in self.environment.my_agents.values()):
+                    row += 'A '
                 else:
-                    row += '. '  # Empty spaces as '.'
+                    row += '. '
+            row += '#'
             print(row)
 
+        # Border
+        print(border_row)
+
     def _matplotlib_visualization(self):
-        # Create a grid for visualization
+        """
+        Matplotlib visualization
+        """
         grid = np.zeros((self.environment.height, self.environment.width))
 
         # Mark terrain types (0: normal, 1: water, 2: mountain)
@@ -44,9 +70,9 @@ class Visualizer:
         plt.imshow(grid, cmap='viridis', interpolation='nearest')
         plt.colorbar(label="Terrain Type")
 
-        # Plot agents on the grid (using red dots for agents)
-        for agent_id, position in self.environment.agents.items():
-            agent_x, agent_y = position['x'], position['y']
+        # Plot agents
+        for agent_id, position in self.environment.my_agents.items():
+            agent_x, agent_y = position.x, position.y
             plt.scatter(agent_x, agent_y, c='red', label=agent_id, s=100)
 
         plt.title("Ecosystem Visualization")
@@ -55,5 +81,8 @@ class Visualizer:
         plt.show()
 
     def _pygame_visualization(self):
-        # Placeholder for Pygame visualization logic
+        """
+        Pygame visualization
+        """
+        # TODO: Pygame visualisation for live demo
         pass
