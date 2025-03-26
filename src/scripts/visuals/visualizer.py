@@ -1,38 +1,59 @@
-import pygame
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Visualizer:
-    def __init__(self, environment, live=True, log_interval=10):
-        self.environment = environment
-        self.live = live
-        self.log_interval = log_interval
-        self.step_count = 0
+    def __init__(self, mode='matplotlib'):
+        self.environment = None
+        self.mode = mode
 
-        if self.live:
-            pygame.init()
-            self.screen = pygame.display.set_mode((environment.width * 10, environment.height * 10))
-        else:
-            self.fig, self.ax = plt.subplots()
-            self.data = []
+    def set_environment(self, environment):
+        self.environment = environment
 
     def update(self):
-        self.step_count += 1
+        if self.environment is None:
+            print("Environment is None")
+        if self.mode == 'console':
+            self._console_visualization()
+        elif self.mode == 'matplotlib':
+            self._matplotlib_visualization()
+        elif self.mode == 'pygame':
+            self._pygame_visualization()
 
-        if self.live:
-            self._update_pygame()
-        elif self.step_count % self.log_interval == 0:
-            self._update_matplotlib()
+    def _console_visualization(self):
+        # Display a basic textual visualization of the environment
+        for y in range(self.environment.height):
+            row = ''
+            for x in range(self.environment.width):
+                if any(agent['x'] == x and agent['y'] == y for agent in self.environment.agents.values()):
+                    row += 'A '  # Representing agents as 'A'
+                else:
+                    row += '. '  # Empty spaces as '.'
+            print(row)
 
-    def _update_pygame(self):
-        self.screen.fill((0, 0, 0))
-        for agent in self.environment.agents:
-            pygame.draw.rect(self.screen, (0, 255, 0), (agent.x * 10, agent.y * 10, 10, 10))
-        pygame.display.flip()
+    def _matplotlib_visualization(self):
+        # Create a grid for visualization
+        grid = np.zeros((self.environment.height, self.environment.width))
 
-    def _update_matplotlib(self):
-        self.data.append(len(self.environment.agents))
-        self.ax.clear()
-        self.ax.plot(self.data)
-        plt.draw()
-        plt.pause(0.01)
+        # Mark terrain types (0: normal, 1: water, 2: mountain)
+        for y in range(self.environment.height):
+            for x in range(self.environment.width):
+                grid[y, x] = self.environment.tiles[x][y].terrain
+
+        # Plot the grid
+        plt.imshow(grid, cmap='viridis', interpolation='nearest')
+        plt.colorbar(label="Terrain Type")
+
+        # Plot agents on the grid (using red dots for agents)
+        for agent_id, position in self.environment.agents.items():
+            agent_x, agent_y = position['x'], position['y']
+            plt.scatter(agent_x, agent_y, c='red', label=agent_id, s=100)
+
+        plt.title("Ecosystem Visualization")
+        plt.xlabel("X")
+        plt.ylabel("Y")
+        plt.show()
+
+    def _pygame_visualization(self):
+        # Placeholder for Pygame visualization logic
+        pass

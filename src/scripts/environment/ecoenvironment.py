@@ -1,67 +1,100 @@
-import gymnasium as gym
+import random
+import time
+from gymnasium.spaces import Discrete, Dict
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
+from src.scripts.environment.tile import Tile
 
 
-class EcoEnvironment(MultiAgentEnv):
-    ROCK = 0
-    PAPER = 1
-    SCISSORS = 2
-    LIZARD = 3
-    SPOCK = 4
-
-    WIN_MATRIX = {
-        (ROCK, ROCK): (0, 0),
-        (ROCK, PAPER): (-1, 1),
-        (ROCK, SCISSORS): (1, -1),
-        (PAPER, ROCK): (1, -1),
-        (PAPER, PAPER): (0, 0),
-        (PAPER, SCISSORS): (-1, 1),
-        (SCISSORS, ROCK): (-1, 1),
-        (SCISSORS, PAPER): (1, -1),
-        (SCISSORS, SCISSORS): (0, 0),
-    }
-
-    def __init__(self, config=None):
+class EcosystemEnv(MultiAgentEnv):
+    def __init__(self, width=10, height=10, num_agents=5, visualizer=None):
         super().__init__()
+        self.width = width
+        self.height = height
+        self.num_agents = num_agents
+        self.visualizer = visualizer
+        self.visualizer.set_environment(self)
 
-        self.agents = self.possible_agents = ["player1", "player2"]
+        # Initialize the grid
+        self.tiles = [[Tile() for _ in range(height)] for _ in range(width)]
 
-        # The observations are always the last taken actions. Hence observation- and
-        # action spaces are identical.
-        self.observation_spaces = self.action_spaces = {
-            "player1": gym.spaces.Discrete(3),
-            "player2": gym.spaces.Discrete(3),
-        }
-        self.last_move = None
-        self.num_moves = 0
+        # Initialize agents with random positions
+        self.agents = {f"agent_{i}": {'x': random.randint(0, width - 1), 'y': random.randint(0, height - 1)} for i in
+                       range(num_agents)}
 
-    def reset(self, *, seed=None, options=None):
-        self.num_moves = 0
+        # Define action and observation spaces
+        self.action_space = Discrete(5)  # Actions: Stay, Up, Down, Left, Right
+        self.observation_space = Dict({
+            "x": Discrete(width),
+            "y": Discrete(height),
+            "terrain": Discrete(3)  # Terrain types: 0 - Normal, 1 - Water, 2 - Mountain
+        })
 
-        # The first observation should not matter (none of the agents has moved yet).
-        # Set them to 0.
-        return {
-            "player1": 0,
-            "player2": 0,
-        }, {}
+    @property
+    def num_agents(self):
+        return self._num_agents
+
+    @num_agents.setter
+    def num_agents(self, value):
+        if value < 1:
+            raise ValueError("Number of agents must be at least 1")
+        self._num_agents = value
+
+    def get_tile(self, x, y):
+        return self.tiles[x][y]
+
+    def reset(self, **kwargs):
+        # Reset agents' positions randomly
+        self.agents = {f"agent_{i}": {'x': random.randint(0, self.width - 1), 'y': random.randint(0, self.height - 1)}
+                       for i in range(self.num_agents)}
+        return {agent_id: self._get_obs(agent_id) for agent_id in self.agents}
 
     def step(self, action_dict):
-        self.num_moves += 1
+        rewards, dones, infos = {}, {}, {}
 
-        move1 = action_dict["player1"]
-        move2 = action_dict["player2"]
+        for agent_id, action in action_dict.items():
+            if agent_id in self.agents:
+                self._apply_action(agent_id, action)
+                rewards[agent_id] = 0  # Temporary reward system
+                dones[agent_id] = False
+                infos[agent_id] = {}
 
-        # Set the next observations (simply use the other player's action).
-        # Note that because we are publishing both players in the observations dict,
-        # we expect both players to act in the next `step()` (simultaneous stepping).
-        observations = {"player1": move2, "player2": move1}
+        # Return updated observations
+        return {agent_id: self._get_obs(agent_id) for agent_id in self.agents}, rewards, dones, infos
 
-        # Compute rewards for each player based on the win-matrix.
-        r1, r2 = self.WIN_MATRIX[move1, move2]
-        rewards = {"player1": r1, "player2": r2}
+    def _apply_action(self, agent_id, action):
+        # Move the agent according to the action taken
+        x, y = self.agents[agent_id]['x'], self.agents[agent_id]['y']
 
-        # Terminate the entire episode (for all agents) once 10 moves have been made.
-        terminateds = {"__all__": self.num_moves >= 10}
+        if action == 1 and y > 0 and self._can_move(x, y - 1):  # Up
+            self.agents[agent_id]['y'] -= 1
+        elif action == 2 and y < self.height - 1 and self._can_move(x, y + 1):  # Down
+            self.agents[agent_id]['y'] += 1
+        elif action == 3 and x > 0 and self._can_move(x - 1, y):  # Left
+            self.agents[agent_id]['x'] -= 1
+        elif action == 4 and x < self.width - 1 and self._can_move(x + 1, y):  # Right
+            self.agents[agent_id]['x'] += 1
 
-        # Leave truncateds and infos empty.
-        return observations, rewards, terminateds, {}, {}
+    def _can_move(self, x, y):
+        # Example: check if tile is not a mountain (impassable)
+        return self.tiles[x][y].terrain != 2
+
+    def _get_obs(self, agent_id):
+        # Get the agent's observation (position and terrain type)
+        x, y = self.agents[agent_id]['x'], self.agents[agent_id]['y']
+        return {"x": x, "y": y, "terrain": self.tiles[x][y].terrain}
+
+    def run(self, steps, sleep_time=0.1):
+        for _ in range(steps):
+            time.sleep(sleep_time)
+
+            # Randomly move each agent
+            action_dict = {}
+            for agent_id in self.agents:
+                action_dict[agent_id] = random.randint(1, 4)  # Random action between 1 and 4 (up, down, left, right)
+
+            # Apply actions
+            self.step(action_dict)
+
+            # Visualize the step
+            if self.visualizer:
+                self.visualizer.update()
