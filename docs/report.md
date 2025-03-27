@@ -250,6 +250,8 @@ agenti, dejansko prispevajo k hitrejšemu in boljšemu učenju.
 2. Končno testiranje,
 3. Evaluacija različnih pristopov.
 
+![Diagram](diagram.svg)
+
 ### Poročilo napredka
 
 Delo v posameznih sprintih je razdeljeno glede na člane ekipe.
@@ -261,7 +263,8 @@ David Jerman:
 - vzpostavitev delovnega okolja (RLlib + torch) in prilagoditev za sisteme z grafično kartico Nvidia,
 - vzpostavitev osnovnega okolja na
   podlagi [RLlib’s MultiAgentEnv API](https://docs.ray.io/en/latest/rllib/multi-agent-envs.html#rllib-multi-agent-environments-doc),
-- zagon primerov knjižnice RLlib.
+- zagon primerov knjižnice RLlib,
+- dodan diagram okolja.
 
 Okolje ni bilo v celoti implementirano, saj sem naletel na težave z okoljem RLlib, in sicer je
 bilo potrebno dodatno namestiti vse potrebne CUDA/CUD-nn knjižnice ter pravilno verzijo torch, ki
