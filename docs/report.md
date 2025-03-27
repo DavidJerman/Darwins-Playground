@@ -230,7 +230,8 @@ agenti, dejansko prispevajo k hitrejšemu in boljšemu učenju.
 
 #### Iteracija 1: Osnovna struktura
 
-1. Osnovna implementacija agentov in okolja ter njihovih lastnosti na podlagi [RLlib’s MultiAgentEnv API](https://docs.ray.io/en/latest/rllib/multi-agent-envs.html#rllib-multi-agent-environments-doc),
+1. Osnovna implementacija agentov in okolja ter njihovih lastnosti na
+   podlagi [RLlib’s MultiAgentEnv API](https://docs.ray.io/en/latest/rllib/multi-agent-envs.html#rllib-multi-agent-environments-doc),
 2. Osnovna delovanje agentov – gibanje, iskanje virov.
 
 #### Iteracija 2: Povečanje kompleksnosti agentov in okolja
@@ -248,3 +249,22 @@ agenti, dejansko prispevajo k hitrejšemu in boljšemu učenju.
 1. Optimizacija performance,
 2. Končno testiranje,
 3. Evaluacija različnih pristopov.
+
+### Poročilo napredka
+
+Delo v posameznih sprintih je razdeljeno glede na člane ekipe.
+
+#### Sprint 1
+
+David Jerman:
+
+- vzpostavitev delovnega okolja (RLlib + torch) in prilagoditev za sisteme z grafično kartico Nvidia,
+- vzpostavitev osnovnega okolja na
+  podlagi [RLlib’s MultiAgentEnv API](https://docs.ray.io/en/latest/rllib/multi-agent-envs.html#rllib-multi-agent-environments-doc),
+- zagon primerov knjižnice RLlib.
+
+Okolje ni bilo v celoti implementirano, saj sem naletel na težave z okoljem RLlib, in sicer je
+bilo potrebno dodatno namestiti vse potrebne CUDA/CUD-nn knjižnice ter pravilno verzijo torch, ki
+podpira zagon Q-learning-a na grafični kartici. Prav tako je bilo potrebno začetno okolje
+prilagoditi, da je kompatibilno s knjižnico RLlib. Nenazadnje pa sem se moral spoznati tudi s
+samo knjižnico, katere prej še nisem uporabljal.
