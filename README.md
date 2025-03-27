@@ -4,12 +4,15 @@ A multi-agent evolutionary simulation exploring adaptation, selection, and survi
 
 ## How to run
 
-To run this project, you will need to install libraries listed in `requirements.txt` with
-`pip install -r requirements.txt`. If you have an Nvidia GPU, you will also need to install
-Nvidia's drivers, CUDA (12.8.1) and CUDnn (9.8.0).
-
-You can install the latest version of torch with 
+You can install the latest version of torch with GPU CUDA support using 
 `pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu128`.
+If you do not wish to use CUDA, install libraries listed in `requirements.txt` with
+`pip install -r requirements.txt`. 
+
+If you have an Nvidia GPU and decide to use it with the latest torch version,
+you will also need to install Nvidia's drivers, CUDA (12.8.1) and CUDnn (9.8.0), as
+well as packages listed in `requirements-nvidia.txt`. But first you need to install
+the latest torch version as described above!
 
 ## Examples
 

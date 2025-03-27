@@ -1,7 +1,11 @@
+import torch
 from visuals.visualizer import Visualizer
 from environment.ecoenvironment import EcosystemEnv
 
 if __name__ == "__main__":
+    # Use GPU if available
+    device = torch.device("cuda" if torch.__version__ >= "2.8" and torch.cuda.is_available() else "cpu")
+
     # Initialize the visualizer and environment
     visualizer = Visualizer(mode='console')
     env = EcosystemEnv(width=10, height=10, num_agents=10, visualizer=visualizer)
