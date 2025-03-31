@@ -45,8 +45,15 @@ class Visualizer:
         for y in range(self.environment.height):
             row = '# '
             for x in range(self.environment.width):
-                if any(agent.x == x and agent.y == y for agent in self.environment.my_agents.values()):
+                # if any(agent.x == x and agent.y == y for agent in self.environment.my_agents.values()):
+                #     row += 'A '
+                agent_here = any(agent.x == x and agent.y == y for agent in self.environment.my_agents.values())
+                tile = self.environment.tiles[x][y]
+
+                if agent_here:
                     row += 'A '
+                elif tile.has_food:
+                    row += 'F '
                 else:
                     row += '. '
             row += '#'
