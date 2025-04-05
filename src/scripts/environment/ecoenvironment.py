@@ -19,6 +19,8 @@ class EcosystemEnv(MultiAgentEnv):
 
         # Initialize the grid
         self.tiles = [[Tile() for _ in range(height)] for _ in range(width)]
+        self.tiles = [[Tile(terrain=random.randint(0, 0), has_food=random.choice([True, False, False]))
+                       for _ in range(height)] for _ in range(width)]
 
         # Initialize agents with random positions
         self.my_agents = {f"agent_{i}": Agent(f"agent_{i}", random.randint(0, width - 1), random.randint(0, height - 1))
@@ -53,8 +55,24 @@ class EcosystemEnv(MultiAgentEnv):
             if agent_id in self.agents:
                 agent = self.my_agents[agent_id] # Get the agent from the dictionary
                 agent.move(action, self.width, self.height, self.tiles)  # Move agent based on action
-                rewards[agent_id] = 0  # Temporary reward system
-                dones[agent_id] = False
+                # rewards[agent_id] = 0  # Temporary reward system
+                # dones[agent_id] = False
+                tile = self.get_tile(agent.x, agent.y)  # Get new tile after movement
+
+                if tile.has_food:
+                    agent.heal(20)  # Gain health when finding food
+                    tile.has_food = False  # Consume food
+                    rewards[agent_id] = 10  # Reward for finding food
+                else:
+                    agent.take_damage(5)  # Lose health when no food is found
+                    rewards[agent_id] = -2  # Small penalty for not finding food
+
+                # Check if agent has died
+                if agent.get_health() <= 0:
+                    dones[agent_id] = True
+                    self.agents.remove(agent_id)  # Remove dead agent from simulation
+                else:
+                    dones[agent_id] = False
                 infos[agent_id] = {}
 
         # Return updated observations
