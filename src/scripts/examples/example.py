@@ -1,104 +1,154 @@
-# === Simplest RLlib + PettingZoo Example ===
-
-# --- Prerequisites ---
-# 1. Install required libraries:
-#    pip install "ray[rllib]" pettingzoo gymnasium torch numpy (or tensorflow)
-
-import ray
-from ray import tune
-from ray.rllib.algorithms.ppo import PPOConfig
-from ray.rllib.env.wrappers.pettingzoo_env import PettingZooEnv
-from ray.rllib.policy.policy import PolicySpec
-from pettingzoo.classic import rps_v2 # A very simple PettingZoo env
 import gymnasium as gym
+import numpy as np
+
+from ray.rllib.env.multi_agent_env import MultiAgentEnv
+from ray.rllib.utils.test_utils import (
+    add_rllib_example_script_args,
+    run_rllib_example_script_experiment,
+)
+from ray.tune.registry import get_trainable_cls, register_env
+
+class TicTacToe(MultiAgentEnv):
+    def __init__(self, config=None):
+        super().__init__()
+
+        # Define the agents in the game.
+        self.agents = self.possible_agents = ["player1", "player2"]
+
+        # Each agent observes a 9D tensor, representing the 3x3 fields of the board.
+        # A 0 means an empty field, a 1 represents a piece of player 1, a -1 a piece of
+        # player 2.
+        self.observation_spaces = {
+            "player1": gym.spaces.Box(-1.0, 1.0, (9,), np.float32),
+            "player2": gym.spaces.Box(-1.0, 1.0, (9,), np.float32),
+        }
+        # Each player has 9 actions, encoding the 9 fields each player can place a piece
+        # on during their turn.
+        self.action_spaces = {
+            "player1": gym.spaces.Discrete(9),
+            "player2": gym.spaces.Discrete(9),
+        }
+
+        self.board = None
+        self.current_player = None
+
+    def reset(self, *, seed=None, options=None):
+        self.board = [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ]
+        # Pick a random player to start the game.
+        self.current_player = np.random.choice(["player1", "player2"])
+        # Return observations dict (only with the starting player, which is the one
+        # we expect to act next).
+        return {
+            self.current_player: np.array(self.board, np.float32),
+        }, {}
+
+    def step(self, action_dict):
+        action = action_dict[self.current_player]
+
+        # Create a rewards-dict (containing the rewards of the agent that just acted).
+        rewards = {self.current_player: 0.0}
+        # Create a terminateds-dict with the special `__all__` agent ID, indicating that
+        # if True, the episode ends for all agents.
+        terminateds = {"__all__": False}
+
+        opponent = "player1" if self.current_player == "player2" else "player2"
+
+        # Penalize trying to place a piece on an already occupied field.
+        if self.board[action] != 0:
+            rewards[self.current_player] -= 5.0
+        # Change the board according to the (valid) action taken.
+        else:
+            self.board[action] = 1 if self.current_player == "player1" else -1
+
+            # After having placed a new piece, figure out whether the current player
+            # won or not.
+            if self.current_player == "player1":
+                win_val = [1, 1, 1]
+            else:
+                win_val = [-1, -1, -1]
+            if (
+                # Horizontal win.
+                self.board[:3] == win_val
+                or self.board[3:6] == win_val
+                or self.board[6:] == win_val
+                # Vertical win.
+                or self.board[0:7:3] == win_val
+                or self.board[1:8:3] == win_val
+                or self.board[2:9:3] == win_val
+                # Diagonal win.
+                or self.board[::3] == win_val
+                or self.board[2:7:2] == win_val
+            ):
+                # Final reward is +5 for victory and -5 for a loss.
+                rewards[self.current_player] += 5.0
+                rewards[opponent] = -5.0
+
+                # Episode is done and needs to be reset for a new game.
+                terminateds["__all__"] = True
+
+            # The board might also be full w/o any player having won/lost.
+            # In this case, we simply end the episode and none of the players receives
+            # +1 or -1 reward.
+            elif 0 not in self.board:
+                terminateds["__all__"] = True
+
+        # Flip players and return an observations dict with only the next player to
+        # make a move in it.
+        self.current_player = opponent
+
+        return (
+            {self.current_player: np.array(self.board, np.float32)},
+            rewards,
+            terminateds,
+            {},
+            {},
+        )
 
 
-# --- 1. Environment Creator ---
-def env_creator(env_config):
-    env = rps_v2.env(**env_config)
-    return env
-
-# --- 2. Register Environment with RLlib ---
-env_name = "rps_v2"
-tune.register_env(env_name, lambda config: PettingZooEnv(env_creator(config)))
-
-
-# --- 3. Basic RLlib Configuration ---
-
-# Need observation and action spaces - get from a dummy instance
-# Important: Must wrap with PettingZooEnv to get RLlib-compatible spaces
-temp_env = PettingZooEnv(env_creator({}))
-obs_space = temp_env.observation_space
-act_space = temp_env.action_space
-agent_ids = temp_env.possible_agents # Should be ['player_0', 'player_1']
-temp_env.close()
-
-# Define policies for the two players
-policies = {
-    "policy_0": PolicySpec(observation_space=obs_space, action_space=act_space),
-    "policy_1": PolicySpec(observation_space=obs_space, action_space=act_space),
-}
-
-# Map agents to policies (simple mapping)
-def policy_mapping_fn(agent_id, episode, worker, **kwargs):
-    # agent_id is 'player_0' or 'player_1'
-    player_num = agent_id.split("_")[-1] # Extracts '0' or '1'
-    return f"policy_{player_num}"
-
-# Configure PPO with minimal settings
-config = (
-    PPOConfig()
-    .environment(
-        env=env_name,
-        # Disable env checking for potentially simpler startup
-        disable_env_checking=True
-    )
-    .framework("torch") # Or "tf2"
-    .multi_agent(
-        policies=policies,
-        policy_mapping_fn=policy_mapping_fn,
-        policies_to_train=["policy_0", "policy_1"] # Train both
-    )
-    # Use minimal resources for basic test
-    .env_runners(
-         num_env_runners=0 # Run env in the main driver process for simplicity
-    )
-    .resources(
-         num_gpus=0 # Ensure CPU only
-    )
-    # --- Let's NOT explicitly enable the new API stack for max stability ---
-    # .api_stack(...) # Commented out for simplicity
-    .debugging(log_level="WARN") # Reduce log noise
+parser = add_rllib_example_script_args(
+    default_reward=-4.0,
+    default_iters=10,
+    default_timesteps=100000
+)
+parser.set_defaults(
+    enable_new_api_stack=True,
+    num_agents=2,
 )
 
-# --- 4. Training Execution ---
+
 if __name__ == "__main__":
-    print("Starting basic RLlib + PettingZoo (RPS) example...")
+    args = parser.parse_args()
 
-    # Initialize Ray (minimal setup)
-    ray.init(num_cpus=2, ignore_reinit_error=True, include_dashboard=False)
+    assert args.num_agents == 2, "Must set --num-agents=2 when running this script!"
 
-    # Run for just one iteration to check if setup works
-    print("Running tune.run for 1 iteration...")
-    results = tune.run(
-        "PPO",
-        name="PPO_RPS_basic_test",
-        stop={
-            "training_iteration": 1, # Stop after one iteration
-        },
-        config=config.to_dict(),
-        verbose=1, # Show basic progress
+    # You can also register the env creator function explicitly with:
+    # register_env("tic_tac_toe", lambda cfg: TicTacToe())
+
+    # Or allow the RLlib user to set more c'tor options via their algo config:
+    # config.environment(env_config={[c'tor arg name]: [value]})
+    # register_env("tic_tac_toe", lambda cfg: TicTacToe(cfg))
+
+    base_config = (
+        get_trainable_cls(args.algo)
+        .get_default_config()
+        .environment(TicTacToe)
+        .multi_agent(
+            # Define two policies.
+            policies={"player1", "player2"},
+            # Map agent "player1" to policy "player1" and agent "player2" to policy
+            # "player2".
+            policy_mapping_fn=lambda agent_id, episode, **kw: agent_id,
+        )
     )
 
-    print("Tune run finished.")
-
-    # Check if run completed without error
-    if results.get_best_trial(metric="training_iteration", mode="max"):
-         print("Experiment completed one iteration successfully!")
-    else:
-         print("Experiment failed to complete one iteration.")
-
-    # Cleanup
-    print("Shutting down Ray...")
-    ray.shutdown()
-    print("Script finished.")
+    run_rllib_example_script_experiment(base_config, args)
