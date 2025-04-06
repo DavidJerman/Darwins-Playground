@@ -1,5 +1,6 @@
 import gymnasium as gym
 import numpy as np
+import random
 
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.test_utils import (
@@ -8,147 +9,159 @@ from ray.rllib.utils.test_utils import (
 )
 from ray.tune.registry import get_trainable_cls, register_env
 
-class TicTacToe(MultiAgentEnv):
+
+class GridFoodSearchEnv(MultiAgentEnv):
     def __init__(self, config=None):
         super().__init__()
 
+        config = config or {}
+
+        self.width = config.get("width", 10)
+        self.height = config.get("height", 10)
+        self._max_episode_steps = config.get("max_steps", 50)
+
         # Define the agents in the game.
-        self.agents = self.possible_agents = ["player1", "player2"]
+        self.agents = self.possible_agents = [f"agent_{i}" for i in range(config.get("num_agents", 2))]
 
-        # Each agent observes a 9D tensor, representing the 3x3 fields of the board.
-        # A 0 means an empty field, a 1 represents a piece of player 1, a -1 a piece of
-        # player 2.
         self.observation_spaces = {
-            "player1": gym.spaces.Box(-1.0, 1.0, (9,), np.float32),
-            "player2": gym.spaces.Box(-1.0, 1.0, (9,), np.float32),
-        }
-        # Each player has 9 actions, encoding the 9 fields each player can place a piece
-        # on during their turn.
-        self.action_spaces = {
-            "player1": gym.spaces.Discrete(9),
-            "player2": gym.spaces.Discrete(9),
+            agent_id: gym.spaces.Box(0.0, 1.0, (4,), np.float32)
+            for agent_id in self.agents
         }
 
-        self.board = None
-        self.current_player = None
+        self.action_spaces = {
+            agent_id: gym.spaces.Discrete(4)
+            for agent_id in self.agents
+        }
+
+        self.agent_positions = {}
+        self.food_position = None
+        self._steps_taken = 0
+        self.render_mode = None
+        self._agent_ids = set(self.agents)
+
+    def _get_random_position(self, existing_positions=None):
+        """Helper to get a random unoccupied position."""
+        existing_positions = existing_positions or set()
+        while True:
+            pos = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
+            if pos not in existing_positions:
+                return pos
+
+    def _get_observations(self):
+        """Returns the observation dictionary for all agents."""
+        obs = {}
+        fx, fy = self.food_position
+        for agent_id in self.agents:
+            ax, ay = self.agent_positions[agent_id]
+            # Normalize positions
+            norm_ax = ax / (self.width - 1) if self.width > 1 else 0.0
+            norm_ay = ay / (self.height - 1) if self.height > 1 else 0.0
+            norm_fx = fx / (self.width - 1) if self.width > 1 else 0.0
+            norm_fy = fy / (self.height - 1) if self.height > 1 else 0.0
+            obs[agent_id] = np.array([norm_ax, norm_ay, norm_fx, norm_fy], dtype=np.float32)
+            # Alternative: Non-normalized observation
+            # obs[agent_id] = np.array([ax, ay, fx, fy], dtype=np.float32)
+        return obs
 
     def reset(self, *, seed=None, options=None):
-        self.board = [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-        ]
-        # Pick a random player to start the game.
-        self.current_player = np.random.choice(["player1", "player2"])
-        # Return observations dict (only with the starting player, which is the one
-        # we expect to act next).
-        return {
-            self.current_player: np.array(self.board, np.float32),
-        }, {}
+        occupied_positions = set()
+
+        self.food_position = self._get_random_position()
+        occupied_positions.add(self.food_position)
+
+        self.agent_positions = {}
+        for agent_id in self.agents:
+            pos = self._get_random_position(occupied_positions)
+            self.agent_positions[agent_id] = pos
+            occupied_positions.add(pos)
+
+        self._steps_taken = 0
+
+        observations = self._get_observations()
+        infos = {agent_id: {} for agent_id in self.agents}
+
+        return observations, infos
 
     def step(self, action_dict):
-        action = action_dict[self.current_player]
-
-        # Create a rewards-dict (containing the rewards of the agent that just acted).
-        rewards = {self.current_player: 0.0}
-        # Create a terminateds-dict with the special `__all__` agent ID, indicating that
-        # if True, the episode ends for all agents.
+        rewards = {agent_id: 0.0 for agent_id in self.agents}
         terminateds = {"__all__": False}
+        truncateds = {"__all__": False}
+        infos = {agent_id: {} for agent_id in self.agents}
 
-        opponent = "player1" if self.current_player == "player2" else "player2"
+        food_found = False
+        self._steps_taken += 1
 
-        # Penalize trying to place a piece on an already occupied field.
-        if self.board[action] != 0:
-            rewards[self.current_player] -= 5.0
-        # Change the board according to the (valid) action taken.
-        else:
-            self.board[action] = 1 if self.current_player == "player1" else -1
+        for agent_id, action in action_dict.items():
+            current_x, current_y = self.agent_positions[agent_id]
+            new_x, new_y = current_x, current_y
 
-            # After having placed a new piece, figure out whether the current player
-            # won or not.
-            if self.current_player == "player1":
-                win_val = [1, 1, 1]
+            # --- Move Agent ---
+            if action == 0:  # Up
+                new_y = min(self.height - 1, current_y + 1)
+            elif action == 1:  # Down
+                new_y = max(0, current_y - 1)
+            elif action == 2:  # Left
+                new_x = max(0, current_x - 1)
+            elif action == 3:  # Right
+                new_x = min(self.width - 1, current_x + 1)
+
+            self.agent_positions[agent_id] = (new_x, new_y)
+
+            # --- Check for Food ---
+            if self.agent_positions[agent_id] == self.food_position:
+                rewards[agent_id] += 10.0  # Reward for finding food
+                food_found = True
+                terminateds["__all__"] = True
+                infos[agent_id]["found_food"] = True  # Example info
             else:
-                win_val = [-1, -1, -1]
-            if (
-                # Horizontal win.
-                self.board[:3] == win_val
-                or self.board[3:6] == win_val
-                or self.board[6:] == win_val
-                # Vertical win.
-                or self.board[0:7:3] == win_val
-                or self.board[1:8:3] == win_val
-                or self.board[2:9:3] == win_val
-                # Diagonal win.
-                or self.board[::3] == win_val
-                or self.board[2:7:2] == win_val
-            ):
-                # Final reward is +5 for victory and -5 for a loss.
-                rewards[self.current_player] += 5.0
-                rewards[opponent] = -5.0
+                rewards[agent_id] -= 0.1
 
-                # Episode is done and needs to be reset for a new game.
-                terminateds["__all__"] = True
+        # Check for truncation (max steps)
+        if self._steps_taken >= self._max_episode_steps:
+            truncateds["__all__"] = True
 
-            # The board might also be full w/o any player having won/lost.
-            # In this case, we simply end the episode and none of the players receives
-            # +1 or -1 reward.
-            elif 0 not in self.board:
-                terminateds["__all__"] = True
+        observations = self._get_observations()
 
-        # Flip players and return an observations dict with only the next player to
-        # make a move in it.
-        self.current_player = opponent
+        final_terminateds = {agent_id: terminateds["__all__"] for agent_id in self.agents}
+        final_truncateds = {agent_id: truncateds["__all__"] for agent_id in self.agents}
+        final_terminateds["__all__"] = terminateds["__all__"]
+        final_truncateds["__all__"] = truncateds["__all__"]
 
-        return (
-            {self.current_player: np.array(self.board, np.float32)},
-            rewards,
-            terminateds,
-            {},
-            {},
-        )
+        return observations, rewards, final_terminateds, final_truncateds, infos
 
 
 parser = add_rllib_example_script_args(
-    default_reward=-4.0,
-    default_iters=10,
+    default_reward=10000,
+    default_iters=5,
     default_timesteps=100000
 )
 parser.set_defaults(
     enable_new_api_stack=True,
-    num_agents=2,
+    # num_agents=2,
 )
-
 
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    assert args.num_agents == 2, "Must set --num-agents=2 when running this script!"
+    env_config = {
+        "width": 10,
+        "height": 10,
+        "num_agents": args.num_agents,
+        "max_steps": 50,
+    }
 
-    # You can also register the env creator function explicitly with:
-    # register_env("tic_tac_toe", lambda cfg: TicTacToe())
+    register_env("grid_food_search", lambda cfg: GridFoodSearchEnv(cfg))
 
-    # Or allow the RLlib user to set more c'tor options via their algo config:
-    # config.environment(env_config={[c'tor arg name]: [value]})
-    # register_env("tic_tac_toe", lambda cfg: TicTacToe(cfg))
+    algo_cls = get_trainable_cls(args.algo)
 
     base_config = (
-        get_trainable_cls(args.algo)
-        .get_default_config()
-        .environment(TicTacToe)
+        algo_cls.get_default_config()
+        .environment("grid_food_search", env_config=env_config)
         .multi_agent(
-            # Define two policies.
-            policies={"player1", "player2"},
-            # Map agent "player1" to policy "player1" and agent "player2" to policy
-            # "player2".
-            policy_mapping_fn=lambda agent_id, episode, **kw: agent_id,
+            policies={"shared_policy"},
+            policy_mapping_fn=lambda agent_id, episode, **kw: "shared_policy",
         )
+        .framework("torch")
     )
 
     run_rllib_example_script_experiment(base_config, args)
