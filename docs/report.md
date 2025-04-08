@@ -271,3 +271,32 @@ bilo potrebno dodatno namestiti vse potrebne CUDA/CUD-nn knjižnice ter pravilno
 podpira zagon Q-learning-a na grafični kartici. Prav tako je bilo potrebno začetno okolje
 prilagoditi, da je kompatibilno s knjižnico RLlib. Nenazadnje pa sem se moral spoznati tudi s
 samo knjižnico, katere prej še nisem uporabljal.
+
+#### Sprint 2
+
+David Jerman:
+
+Kaj je bilo narejeno:
+
+- manši popravki,
+- analiza primerov PPO (algoritem na osnovi nevronskih mrež za več-agentni sistem - vsebovan v RLLib),
+- implementacija osnovnega okolja za PPO,
+- učenje, klasifikacija in vizualizacija s PPO za dano okolje.
+
+Kje sem naletel na težave:
+
+Ko sem želel PPO uporabiti v kombinaciji z najinim okoljem, sem naletel na več problemov:
+
+- manjkajoči algoritmi v RLLib - QDN sploh ni prisoten v najnovejši različici,
+- težave z delovanjem na Windows sistemu,
+- nazadnje sem rešitev prestavil v WSL2, namestil druge verzije knjižnjic in primeri so začeli delovati,
+- naletel pa sem tudi na problem, kjer v primeru, da uporabim bolj kompleksna opazovanja pri agentih (
+  torej da poleg lokacij opazujem še druge okoljske lastnosti), algoritem ponovno odpove. Za reševanje
+  tega problema sem ravno tako zapravil precej časa, a je dokumentacija na spletu slaba, napake, ki pa jih
+  dobim pa ne povejo nič uporabnega.
+
+Cilj za naslednji teden:
+
+- usposobiti celotno okolje za PPO,
+- nadgraditi okolje,
+- začeti z delom na najinem algoritmu (CTDE Q-Learning).
