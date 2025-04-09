@@ -24,7 +24,7 @@ class Agent:
         elif action == 4 and self.x < width - 1 and self._can_move(self.x + 1, self.y, tiles):  # Right
             self.x += 1
 
-        # Check for food and adjust health accordingly
+        # Check for food and adjust health
         if tiles[self.x][self.y].has_food:
             self.heal(self.food_heal)
             tiles[self.x][self.y].has_food = False  # Consume the food
