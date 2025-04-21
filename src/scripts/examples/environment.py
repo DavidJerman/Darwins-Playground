@@ -5,6 +5,10 @@ import numpy as np
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 import gymnasium as gym
 
+from agent import Agent
+from tile import Tile
+
+
 class GridFoodSearchEnv(MultiAgentEnv):
     VERBOSE = False
 
@@ -19,6 +23,10 @@ class GridFoodSearchEnv(MultiAgentEnv):
         self.width = config.get("width", 10)
         self.height = config.get("height", 10)
         self._max_episode_steps = config.get("max_steps", 50)
+
+        self.tiles = [[Tile() for _ in range(self.height)] for _ in range(self.width)]
+        self.tiles = [[Tile(terrain=random.randint(0, 0), has_food=random.choice([True, False, False]))
+                       for _ in range(self.height)] for _ in range(self.width)]
         # ---
 
         # --- Get render_mode from config ---
@@ -31,10 +39,13 @@ class GridFoodSearchEnv(MultiAgentEnv):
 
         # Define the agents in the game.
         self.agents = self.possible_agents = [f"agent_{i}" for i in range(config.get("num_agents", 2))]
+        self.my_agents = {agent: Agent(agent, random.randint(0, self.width - 1), random.randint(0, self.height - 1))
+                          for agent in self.agents}
 
         obs_space_dict = {
             "agent_position": gym.spaces.Box(low=0.0, high=1.0, shape=(2,), dtype=np.float32),
-            "food_position": gym.spaces.Box(low=0.0, high=1.0, shape=(2,), dtype=np.float32)
+            "food_position": gym.spaces.Box(low=0.0, high=1.0, shape=(2,), dtype=np.float32),
+            "terrain": gym.spaces.Discrete(3),
         }
         self.observation_spaces = {
             agent_id: gym.spaces.Dict(obs_space_dict)
@@ -52,6 +63,9 @@ class GridFoodSearchEnv(MultiAgentEnv):
 
         print(f"Env Initialized: ... render_mode={self.render_mode}")
 
+    def get_tile(self, x, y):
+        return self.tiles[x][y]
+
     def _get_random_position(self, existing_positions=None):
         """Helper to get a random unoccupied position."""
         existing_positions = existing_positions or set()
@@ -63,37 +77,33 @@ class GridFoodSearchEnv(MultiAgentEnv):
     def _get_observations(self):
         """Returns the observation dictionary for all agents."""
         obs = {}
-        fx, fy = self.food_position
 
         for agent_id in self.agents:
-            ax, ay = self.agent_positions[agent_id]
-            # Normalize positions
+            agent = self.my_agents[agent_id]
+
+            ax, ay = agent.x, agent.y
+
             norm_ax = ax / (self.width - 1) if self.width > 1 else 0.0
             norm_ay = ay / (self.height - 1) if self.height > 1 else 0.0
-            norm_fx = fx / (self.width - 1) if self.width > 1 else 0.0
-            norm_fy = fy / (self.height - 1) if self.height > 1 else 0.0
+            norm_fx = 0.0
+            norm_fy = 0.0
 
             norm_agent_pos = np.array([norm_ax, norm_ay], dtype=np.float32)
             norm_food_pos = np.array([norm_fx, norm_fy], dtype=np.float32)
 
             obs_this_agent = {
                 "agent_position": norm_agent_pos,
-                "food_position": norm_food_pos
+                "food_position": norm_food_pos,
+                "terrain": self.tiles[ax][ay].terrain,
             }
             obs[agent_id] = obs_this_agent
         return obs
 
     def reset(self, *, seed=None, options=None):
-        occupied_positions = set()
-
-        self.food_position = self._get_random_position()
-        occupied_positions.add(self.food_position)
-
-        self.agent_positions = {}
-        for agent_id in self.agents:
-            pos = self._get_random_position(occupied_positions)
-            self.agent_positions[agent_id] = pos
-            occupied_positions.add(pos)
+        for agent in self.my_agents.values():
+            agent.reset()
+            agent.x = random.randint(0, self.width - 1)
+            agent.y = random.randint(0, self.height - 1)
 
         self._steps_taken = 0
 
@@ -103,40 +113,27 @@ class GridFoodSearchEnv(MultiAgentEnv):
         return observations, infos
 
     def step(self, action_dict):
-        if GridFoodSearchEnv.VERBOSE:
-            print("\n--- Environment Reset ---")
-
         rewards = {agent_id: 0.0 for agent_id in self.agents}
         terminateds = {"__all__": False}
         truncateds = {"__all__": False}
         infos = {agent_id: {} for agent_id in self.agents}
 
-        food_found = False
         self._steps_taken += 1
 
         for agent_id, action in action_dict.items():
-            current_x, current_y = self.agent_positions[agent_id]
-            new_x, new_y = current_x, current_y
+            agent = self.my_agents[agent_id]
+            tile = self.get_tile(agent.x, agent.y)
 
-            # --- Move Agent ---
-            if action == 0:  # Up
-                new_y = min(self.height - 1, current_y + 1)
-            elif action == 1:  # Down
-                new_y = max(0, current_y - 1)
-            elif action == 2:  # Left
-                new_x = max(0, current_x - 1)
-            elif action == 3:  # Right
-                new_x = min(self.width - 1, current_x + 1)
+            agent.move(action, self.width, self.height, self.tiles)
 
-            self.agent_positions[agent_id] = (new_x, new_y)
-
-            # --- Check for Food ---
-            if self.agent_positions[agent_id] == self.food_position:
-                rewards[agent_id] += 10.0  # Reward for finding food
-                food_found = True
+            if tile.has_food:
+                agent.heal(20)
+                tile.has_food = False
+                rewards[agent_id] += 10.0
                 terminateds["__all__"] = True
-                infos[agent_id]["found_food"] = True  # Example info
+                infos[agent_id]["found_food"] = True
             else:
+                agent.take_damage(5)
                 rewards[agent_id] -= 0.1
 
         # Check for truncation (max steps)

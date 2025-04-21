@@ -68,9 +68,6 @@ if __name__ == "__main__":
     register_env(env_name, lambda cfg: GridFoodSearchEnv(cfg))
     print(f"Environment '{env_name}' registered.")
 
-    if not ray.is_initialized():
-        ray.init()
-        print("Ray initialized.")
     if args.visualize:
         if args.checkpoint_path:
             visualize_policy(args.checkpoint_path, env_config, num_episodes=5)
