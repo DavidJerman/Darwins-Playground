@@ -1,18 +1,24 @@
+import random
 import time
+
 import gymnasium as gym
 import numpy as np
 import pygame
-import random
-import torch
-
 import ray
+import torch
+from ray.rllib.algorithms import PPOConfig
+from ray.rllib.algorithms.ppo import PPO
+from ray.rllib.connectors.env_to_module import (
+    FlattenObservations,
+    PrevActionsPrevRewards,
+)
+from ray.rllib.core.rl_module.default_model_config import DefaultModelConfig
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.test_utils import (
     add_rllib_example_script_args,
     run_rllib_example_script_experiment,
 )
-from ray.tune.registry import get_trainable_cls, register_env
-from ray.rllib.algorithms.ppo import PPO
+from ray.tune.registry import register_env
 
 
 class GridFoodSearchEnv(MultiAgentEnv):
@@ -42,8 +48,12 @@ class GridFoodSearchEnv(MultiAgentEnv):
         # Define the agents in the game.
         self.agents = self.possible_agents = [f"agent_{i}" for i in range(config.get("num_agents", 2))]
 
+        obs_space_dict = {
+            "agent_position": gym.spaces.Box(low=0.0, high=1.0, shape=(2,), dtype=np.float32),
+            "food_position": gym.spaces.Box(low=0.0, high=1.0, shape=(2,), dtype=np.float32)
+        }
         self.observation_spaces = {
-            agent_id: gym.spaces.Box(0.0, 1.0, (4,), np.float32)
+            agent_id: gym.spaces.Dict(obs_space_dict)
             for agent_id in self.agents
         }
 
@@ -70,6 +80,7 @@ class GridFoodSearchEnv(MultiAgentEnv):
         """Returns the observation dictionary for all agents."""
         obs = {}
         fx, fy = self.food_position
+
         for agent_id in self.agents:
             ax, ay = self.agent_positions[agent_id]
             # Normalize positions
@@ -77,7 +88,15 @@ class GridFoodSearchEnv(MultiAgentEnv):
             norm_ay = ay / (self.height - 1) if self.height > 1 else 0.0
             norm_fx = fx / (self.width - 1) if self.width > 1 else 0.0
             norm_fy = fy / (self.height - 1) if self.height > 1 else 0.0
-            obs[agent_id] = np.array([norm_ax, norm_ay, norm_fx, norm_fy], dtype=np.float32)
+
+            norm_agent_pos = np.array([norm_ax, norm_ay], dtype=np.float32)
+            norm_food_pos = np.array([norm_fx, norm_fy], dtype=np.float32)
+
+            obs_this_agent = {
+                "agent_position": norm_agent_pos,
+                "food_position": norm_food_pos
+            }
+            obs[agent_id] = obs_this_agent
         return obs
 
     def reset(self, *, seed=None, options=None):
@@ -425,9 +444,11 @@ if __name__ == "__main__":
         "max_steps": 50,
     }
 
+    env_name = "grid_food_search"
+    register_env(env_name, lambda cfg: GridFoodSearchEnv(cfg))
+
     if args.visualize:
         if args.checkpoint_path:
-            register_env("grid_food_search", lambda cfg: GridFoodSearchEnv(cfg))
             visualize_policy(args.checkpoint_path, env_config, num_episodes=5)
         else:
             print("\nError: --checkpoint-path must be provided for visualization.")
@@ -435,18 +456,40 @@ if __name__ == "__main__":
     else:
         print("\n--- Starting Training ---")
 
-        register_env("grid_food_search", lambda cfg: GridFoodSearchEnv(cfg))
+        if args.algo.upper() == "PPO":
+            config_builder = PPOConfig()
+        else:
+            config_builder = PPOConfig()
 
-        algo_cls = get_trainable_cls(args.algo)
+
+        def _env_to_module(env):
+            is_multi_agent = True
+            return [
+                PrevActionsPrevRewards(multi_agent=is_multi_agent),
+                FlattenObservations(multi_agent=is_multi_agent),
+            ]
+
 
         base_config = (
-            algo_cls.get_default_config()
-            .environment("grid_food_search", env_config=env_config)
+            config_builder
+            .environment(env_name, env_config=env_config)
             .multi_agent(
                 policies={"shared_policy"},
                 policy_mapping_fn=lambda agent_id, episode, **kw: "shared_policy",
             )
             .framework("torch")
+            .api_stack(
+                enable_rl_module_and_learner=True,
+                enable_env_runner_and_connector_v2=True,
+            )
+            .env_runners(env_to_module_connector=_env_to_module)
+            .rl_module(
+                model_config=DefaultModelConfig(
+                    use_lstm=False,
+                    fcnet_hiddens=[256, 256],
+                    fcnet_activation="relu",
+                )
+            )
         )
 
         run_rllib_example_script_experiment(base_config, args)
