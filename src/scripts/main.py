@@ -18,9 +18,21 @@ parser = add_rllib_example_script_args(
     default_timesteps=100000
 )
 
-parser.add_argument("--width", type=int, default=10)
-parser.add_argument("--height", type=int, default=10)
-parser.add_argument("--max-steps", type=int, default=50)
+parser.add_argument(
+    "--width",
+    type=int,
+    default=10
+)
+parser.add_argument(
+    "--height",
+    type=int,
+    default=10
+)
+parser.add_argument(
+    "--max-steps",
+    type=int,
+    default=50
+)
 parser.add_argument(
     "--visualize",
     action="store_true",
@@ -62,7 +74,9 @@ default_gpus_per_learner = 1.0 if args.device == 'cuda' else 0.0
 parser.set_defaults(
     enable_new_api_stack=True,
     num_gpus_per_learner=default_gpus_per_learner,
-    num_cpus_per_learner=int(os.cpu_count() * 0.75) if os.cpu_count() is not None else 2,
+    num_cpus_per_learner=int((os.cpu_count() - 1) * 0.75) if os.cpu_count() is not None else 2,
+    num_agents=2,
+    verbose=1,
 )
 
 if __name__ == "__main__":
