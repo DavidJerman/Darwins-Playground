@@ -4,15 +4,21 @@ A multi-agent evolutionary simulation exploring adaptation, selection, and survi
 
 ## How to run
 
-You can install the latest version of torch with GPU CUDA support using 
-`pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu128`.
-If you do not wish to use CUDA, install libraries listed in `requirements.txt` with
-`pip install -r requirements.txt`. 
+Before installing, this step might differ based on whether you have CUDA installed on your system.
+If you do, you will first need to install the correct version of CUDA by following
+[PyTorch Installation Instructions](https://pytorch.org/).
 
-If you have an Nvidia GPU and decide to use it with the latest torch version,
-you will also need to install Nvidia's drivers, CUDA (12.8.1) and CUDnn (9.8.0), as
-well as packages listed in `requirements-nvidia.txt`. But first you need to install
-the latest torch version as described above!
+If you do not have CUDA installed, you can install torch by simply running:
+
+```bash
+pip3 install torch
+```
+
+Other libraries can be installed with (tested with Python 3.10 and 3.11):
+
+```bash
+pip3 install matplotlib numpy "ray[rllib]" pygame gymnasium
+```
 
 ## Examples
 

@@ -10,10 +10,6 @@ from ray.rllib.utils.test_utils import (
 
 
 def _setup_connectors(env):
-    # This function might need access to args (like num_agents) or env_config
-    # For simplicity, let's assume it's always multi-agent for this env
-    # A better way would be to pass config/args into the main training func
-    # and then potentially into here if needed.
     is_multi_agent = True # Hardcoded for GridFoodSearchEnv > 1 agent
     return [
         PrevActionsPrevRewards(multi_agent=is_multi_agent),
@@ -34,7 +30,10 @@ def setup_and_run_training(args, env_name, env_config):
         # Build the main config using the builder pattern
         base_config = (
             config_builder
-            .environment(env_name, env_config=env_config)
+            .environment(
+                env_name,
+                env_config=env_config
+            )
             .multi_agent(
                 policies={"shared_policy"},
                 policy_mapping_fn=lambda agent_id, episode, **kw: "shared_policy",

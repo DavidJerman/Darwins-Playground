@@ -1,3 +1,9 @@
+import os
+
+from setup import setup
+
+used_device_initial = setup()
+
 import ray
 from ray.rllib.utils.test_utils import add_rllib_example_script_args
 from ray.tune.registry import register_env
@@ -38,9 +44,25 @@ parser.add_argument(
     default=0.3,
     help="Delay between steps during visualization."
 )
+parser.add_argument(
+    "--device",
+    type=str,
+    default=used_device_initial,
+    help="Device to run on (e.g., 'cpu', 'cuda')."
+         "If not provided, will use the device used by Ray."
+         "If provided, will override the device used by Ray."
+         "This is useful for running on a remote cluster."
+         "Note that this is not supported for all algorithms."
+)
+
+args = parser.parse_args()
+
+default_gpus_per_learner = 1.0 if args.device == 'cuda' else 0.0
+
 parser.set_defaults(
     enable_new_api_stack=True,
-    # num_agents=2,
+    num_gpus_per_learner=default_gpus_per_learner,
+    num_cpus_per_learner=int(os.cpu_count() * 0.75) if os.cpu_count() is not None else 2,
 )
 
 if __name__ == "__main__":
@@ -55,7 +77,9 @@ if __name__ == "__main__":
     print(f"----- Running RLlib Example -----")
     print(f"Algorithm: {args.algo}")
     print(f"Framework: {args.framework}")
-    print(f"Running with arguments: {vars(args)}")
+    print("Running with the following arguments:")
+    for key, value in vars(args).items():
+        print(f"- {key}: {value}")
 
     env_config = {
         "width": 10,
