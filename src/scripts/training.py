@@ -1,4 +1,4 @@
-from ray.rllib.algorithms import PPOConfig
+from ray.rllib.algorithms import PPOConfig, DQNConfig, SACConfig, APPOConfig, IMPALAConfig
 from ray.rllib.connectors.env_to_module import (
     FlattenObservations,
     PrevActionsPrevRewards,
@@ -8,26 +8,52 @@ from ray.rllib.utils.test_utils import (
     run_rllib_example_script_experiment,
 )
 
+algo_map = {
+    "PPO": PPOConfig,
+    "DQN": DQNConfig,
+    "SAC": SACConfig,
+    "APPO": APPOConfig,
+    "IMPALA": IMPALAConfig,
+}
+
+# TODO: DQN requires NO shared policy!
+# TODO: SAC only supports soft action spaces (no discrete)!
+# TODO: APPO and IMPALA need the same issue fixed!
+
 
 def _setup_connectors(env):
-    is_multi_agent = True # Hardcoded for GridFoodSearchEnv > 1 agent
+    is_multi_agent = True
     return [
         PrevActionsPrevRewards(multi_agent=is_multi_agent),
         FlattenObservations(multi_agent=is_multi_agent),
     ]
+
 
 def setup_and_run_training(args, env_name, env_config):
     """Configures and runs the RLlib training experiment."""
     print(f"\n--- Starting Training (Env={env_name}) ---")
 
     try:
-        if args.algo.upper() == "PPO":
-            config_builder = PPOConfig()
-        else:
-            print(f"Warning: Algo '{args.algo}' not explicitly supported, using PPOConfig.")
-            config_builder = PPOConfig() # Fallback
+        algo_name = args.algo.upper()
+        config_class = algo_map.get(algo_name)
 
-        # Build the main config using the builder pattern
+        if algo_name == "DQN":
+            raise ValueError("DQN does not support shared policy!")
+
+        if algo_name == "SAC":
+            raise ValueError("SAC only supports soft action spaces (no discrete)!")
+
+        if algo_name == "APPO":
+            raise ValueError("APPO not supported!")
+
+        if algo_name == "IMPALA":
+            raise ValueError("IMPALA not supported!")
+
+        if config_class is None:
+            raise ValueError(f"Unsupported algo '{args.algo}'. Available: {list(algo_map.keys())}")
+
+        config_builder = config_class()
+
         base_config = (
             config_builder
             .environment(
@@ -38,7 +64,7 @@ def setup_and_run_training(args, env_name, env_config):
                 policies={"shared_policy"},
                 policy_mapping_fn=lambda agent_id, episode, **kw: "shared_policy",
             )
-            .framework("torch")
+            .framework(args.framework)
             .api_stack(
                 enable_rl_module_and_learner=True,
                 enable_env_runner_and_connector_v2=True,
@@ -62,9 +88,9 @@ def setup_and_run_training(args, env_name, env_config):
         # Run the experiment using RLlib utility function
         results = run_rllib_example_script_experiment(base_config, args)
         print("\n--- Training finished ---")
-        print("Results:", results) # Optionally print results path
+        print("Results:", results)  # Optionally print results path
 
     except Exception as e:
-         print(f"\nError during training setup or execution: {e}")
-         import traceback
-         traceback.print_exc()
+        print(f"\nError during training setup or execution: {e}")
+        import traceback
+        traceback.print_exc()

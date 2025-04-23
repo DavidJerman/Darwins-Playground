@@ -77,6 +77,7 @@ parser.set_defaults(
     num_cpus_per_learner=int((os.cpu_count() - 1) * 0.75) if os.cpu_count() is not None else 2,
     num_agents=2,
     verbose=1,
+    algo="PPO",
 )
 
 if __name__ == "__main__":
