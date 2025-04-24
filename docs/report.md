@@ -300,3 +300,43 @@ Cilj za naslednji teden:
 - usposobiti celotno okolje za PPO,
 - nadgraditi okolje,
 - začeti z delom na najinem algoritmu (CTDE Q-Learning).
+
+#### Sprint 3
+
+David Jerman:
+
+Ta teden sem dokončal vse kar sem si zadal za ta šprint:
+
+1. Popravil sem agentovo opazovanje okolja. Zaradi pomanjkljive dokumentacije sem imel kar precej dela.
+   Agent zdaj lahko prejme različne podatke, kot so njegova pozicija, pozicija hrane, vrsta terena itd.
+   Glavna rešitev je bila uporaba konektorja, ki vhodne podatke zravna (flatten). Dodal sem tudi en sloj po meri.
+2. Odstranil sem stare datoteke in obstoječo kodo dokaj enostavno integriral v trenutno ogrodje, saj je bila
+   že prej narejena v skladu z RLLib.
+3. Izboljšal sem kompatibilnost s strojno in programsko opremo na različnih napravah. Algoritem zdaj uporabi CUDA,
+   če je na voljo, sicer pa preklopi na CPU. Uporabnik lahko z zastavico --device izbere želeno napravo.
+4. Dodal sem nekaj privzetih vrednosti za lažji zagon.
+5. Na koncu sem dodal še možnost uporabe različnih algoritmov (poleg PPO, ki ga uporabljava). Ti algoritmi še niso
+   v celoti podprti, saj imajo določene specifike, ki jih bo treba še implementirati.
+
+Andraž Škof:
+
+Ustvarili sem mrežo ploščic (ang. tiles), kjer vsaka ploščica predstavlja določen tip terena. V implementaciji
+sem vključil tri osnovne tipe terena:
+
+Trava (🌿)
+
+Pesek (🏜️)
+
+Skale (⛰️)
+
+Postopek generacije:
+Inicializacija terena:
+Na začetku je celotna mreža zapolnjena z naključno določenim peskom in skalami, nato pa se dodajo gruče trave.
+
+Povezane travnate površine:
+Trava ni več razporejena povsem naključno – pazili smo, da se pojavlja v povezanih skupinah po 5–10 ploščic, da
+simulira bolj realistično naravno okolje (npr. travnike).
+
+Vizualizacija:
+Končni rezultat je bil izpisan v ukazni vrstici, kjer vsak tip terena predstavlja določen emoji, kar omogoča hiter
+vizualni pregled nad razporeditvijo terena.
