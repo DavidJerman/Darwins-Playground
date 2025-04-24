@@ -12,81 +12,53 @@ GRASS = 0
 SAND = 1
 ROCK = 2
 
-# Optional symbols for visualization
+# Symbols for visualization
 TERRAIN_SYMBOLS = {
     GRASS: "🌿",
     SAND: "🏖️",
     ROCK: "⛰️",
 }
 
-# Directions for the flood-fill (up, down, left, right)
-DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-
 
 def generate_terrain(width, height):
     """
-    Generates a grid of tiles with connected clusters of grass (5-10 connected grass tiles).
+    Generates a grid mostly filled with sand and rock,
+    with small connected grass clusters.
     """
     tiles = [[Tile() for _ in range(height)] for _ in range(width)]
 
-    # Start with all tiles as grass
+    # Step 1: Fill the map with sand and rock
     for x in range(width):
         for y in range(height):
-            tiles[x][y] = Tile(terrain=GRASS, has_food=random.choice([True, False, False]))  # Default to grass
+            terrain = random.choice([SAND, ROCK])
+            tiles[x][y] = Tile(terrain=terrain, has_food=random.choice([True, False, False]))
 
-    def in_bounds(x, y):
-        return 0 <= x < width and 0 <= y < height
+    # Step 2: Create connected grass clusters
+    def create_grass_cluster(center_x, center_y, size):
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        cluster = [(center_x, center_y)]
+        visited = set(cluster)
 
-    def flood_fill(x, y, max_size):
-        """Flood-fill to create a cluster of connected grass tiles of random size (5-10)."""
-        stack = [(x, y)]
-        visited = set(stack)
-        size = 0
-        tiles[x][y].terrain = GRASS  # Start with grass at the initial point
-
-        while stack and size < max_size:
-            cx, cy = stack.pop()
-            size += 1
-
-            # Try all 4 directions
-            random.shuffle(DIRECTIONS)  # Randomize direction order for variety
-            for dx, dy in DIRECTIONS:
-                nx, ny = cx + dx, cy + dy
-                if in_bounds(nx, ny) and (nx, ny) not in visited:
+        while len(cluster) < size:
+            x, y = random.choice(cluster)
+            random.shuffle(directions)
+            for dx, dy in directions:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < width and 0 <= ny < height and (nx, ny) not in visited:
+                    cluster.append((nx, ny))
                     visited.add((nx, ny))
-                    tiles[nx][ny].terrain = GRASS
-                    stack.append((nx, ny))
+                    if len(cluster) >= size:
+                        break
 
-        return size
+        for gx, gy in cluster:
+            tiles[gx][gy].terrain = GRASS
 
-    def place_grass_clusters(num_clusters):
-        """Place connected clusters of grass tiles (5-10)."""
-        for _ in range(num_clusters):
-            # Pick a random starting point for the cluster
-            start_x = random.randint(0, width - 1)
-            start_y = random.randint(0, height - 1)
-            cluster_size = random.randint(5, 10)  # Size of the cluster (5-10 tiles)
-            flood_fill(start_x, start_y, cluster_size)
-
-    # Place connected clusters of grass
-    place_grass_clusters(num_clusters=5)
-
-    # Add patches of other terrain types (SAND, ROCK) outside the grass clusters
-    def make_patch(center_x, center_y, radius, terrain_type):
-        for x in range(center_x - radius, center_x + radius + 1):
-            for y in range(center_y - radius, center_y + radius + 1):
-                if in_bounds(x, y) and tiles[x][y].terrain == GRASS:  # Replace only grass
-                    if random.random() < 0.5:  # fuzzy edge
-                        tiles[x][y].terrain = terrain_type
-
-    # Create some terrain clusters (SAND and ROCK)
-    num_patches = 3
-    for _ in range(num_patches):
+    # Step 3: Add 3 to 6 grass clusters
+    for _ in range(random.randint(2, 4)):
         cx = random.randint(0, width - 1)
         cy = random.randint(0, height - 1)
-        radius = random.randint(1, 3)
-        terrain_type = random.choice([SAND, ROCK])
-        make_patch(cx, cy, radius, terrain_type)
+        cluster_size = random.randint(5, 10)
+        create_grass_cluster(cx, cy, cluster_size)
 
     return tiles
 
