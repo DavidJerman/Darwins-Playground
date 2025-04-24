@@ -303,6 +303,8 @@ Cilj za naslednji teden:
 
 #### Sprint 3
 
+Repozitorij: [Darwin's Playground](https://github.com/DavidJerman/Darwins-Playground)
+
 David Jerman:
 
 Ta teden sem dokončal vse kar sem si zadal za ta šprint:
