@@ -56,10 +56,7 @@ def visualize_policy(checkpoint_path, env_config, num_episodes=5):
             try:
                 # 1. Get the RL Module (can potentially be moved outside the loop if static)
                 module = algo.get_module("shared_policy")
-                try:
-                    device = next(module.parameters()).device
-                except Exception:
-                    device = "cpu"
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                 module.to(device)
                 module.eval()
 
@@ -73,9 +70,19 @@ def visualize_policy(checkpoint_path, env_config, num_episodes=5):
                 obs_list = [obs[agent_id] for agent_id in agent_ids]
                 obs_batch = np.stack(obs_list, axis=0)
 
+                # Flatten the dictionaries into a NumPy array
+                flattened_obs = []
+                for obs in obs_batch:
+                    # Flatten each observation: agent_position + food_position + terrain
+                    flattened = np.concatenate([obs['agent_position'], obs['food_position'], [obs['terrain']]])
+                    flattened_obs.append(flattened)
+
+                # Convert to NumPy array with dtype float32
+                obs_array = np.array(flattened_obs, dtype=np.float32)
+
                 # Create the input dictionary expected by the RLModule
                 input_dict = {
-                    "obs": torch.tensor(obs_batch, dtype=torch.float32).to(device)
+                    "obs": torch.tensor(obs_array, dtype=torch.float32).to(device)
                 }
 
                 with torch.no_grad():  # Inference

@@ -1,9 +1,4 @@
 import random
-import sys
-import os
-
-# Add the src/scripts directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from tile import Tile
 
@@ -19,17 +14,18 @@ TERRAIN_SYMBOLS = {
     ROCK: "⛰️",
 }
 
-def generate_terrain(width, height):
+
+def generate_terrain(_width, _height):
     """
     Generates a grid mostly filled with sand and rock,
     with small connected grass clusters.
     Exactly 5 food items placed on grass tiles.
     """
-    tiles = [[Tile() for _ in range(height)] for _ in range(width)]
+    tiles = [[Tile() for _ in range(_height)] for _ in range(_width)]
 
     # Step 1: Fill the map with sand and rock (no food yet)
-    for x in range(width):
-        for y in range(height):
+    for x in range(_width):
+        for y in range(_height):
             terrain = random.choice([SAND, ROCK])
             tiles[x][y] = Tile(terrain=terrain, has_food=False)
 
@@ -44,7 +40,7 @@ def generate_terrain(width, height):
             random.shuffle(directions)
             for dx, dy in directions:
                 nx, ny = x + dx, y + dy
-                if 0 <= nx < width and 0 <= ny < height and (nx, ny) not in visited:
+                if 0 <= nx < _width and 0 <= ny < _height and (nx, ny) not in visited:
                     cluster.append((nx, ny))
                     visited.add((nx, ny))
                     if len(cluster) >= size:
@@ -55,13 +51,13 @@ def generate_terrain(width, height):
 
     # Step 3: Add 3 to 6 grass clusters
     for _ in range(random.randint(2, 4)):
-        cx = random.randint(0, width - 1)
-        cy = random.randint(0, height - 1)
+        cx = random.randint(0, _width - 1)
+        cy = random.randint(0, _height - 1)
         cluster_size = random.randint(5, 10)
         create_grass_cluster(cx, cy, cluster_size)
 
     # Step 4: Put food on exactly 5 random grass tiles
-    grass_tiles = [(x, y) for x in range(width) for y in range(height) if tiles[x][y].terrain == GRASS]
+    grass_tiles = [(x, y) for x in range(_width) for y in range(_height) if tiles[x][y].terrain == GRASS]
 
     if len(grass_tiles) >= 5:
         food_positions = random.sample(grass_tiles, 5)
@@ -72,19 +68,24 @@ def generate_terrain(width, height):
 
     return tiles
 
+
+def print_terrain(grid, _width, _height):
+    food_symbol = "🍎"
+
+    print("Terrain map:\n")
+    for y in range(_height):
+        row = ""
+        for x in range(_width):
+            tile = grid[x][y]
+            if tile.has_food:
+                row += food_symbol + " "
+            else:
+                row += TERRAIN_SYMBOLS[tile.terrain] + " "
+        print(row)
+
+
 if __name__ == "__main__":
     width, height = 10, 10
     terrain_grid = generate_terrain(width, height)
 
-    FOOD_SYMBOL = "🍎"
-
-    print("Terrain map:\n")
-    for y in range(height):
-        row = ""
-        for x in range(width):
-            tile = terrain_grid[x][y]
-            if tile.has_food:
-                row += FOOD_SYMBOL + " "
-            else:
-                row += TERRAIN_SYMBOLS[tile.terrain] + " "
-        print(row)
+    print_terrain(terrain_grid, width, height)

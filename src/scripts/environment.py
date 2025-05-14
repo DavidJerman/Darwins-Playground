@@ -1,3 +1,4 @@
+import copy
 import random
 import pygame
 import numpy as np
@@ -6,7 +7,7 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv
 import gymnasium as gym
 
 from agent import Agent
-from tile import Tile
+from terrain_generator import generate_terrain, print_terrain
 
 
 class GridFoodSearchEnv(MultiAgentEnv):
@@ -24,9 +25,9 @@ class GridFoodSearchEnv(MultiAgentEnv):
         self.height = config.get("height", 10)
         self._max_episode_steps = config.get("max_steps", 50)
 
-        self.tiles = [[Tile() for _ in range(self.height)] for _ in range(self.width)]
-        self.tiles = [[Tile(terrain=random.randint(0, 0), has_food=random.choice([True, False, False]))
-                       for _ in range(self.height)] for _ in range(self.width)]
+        self.original_tiles = generate_terrain(self.width, self.height)
+        self.tiles = copy.deepcopy(self.original_tiles)
+        print_terrain(self.tiles, self.width, self.height)
         # ---
 
         # --- Get render_mode from config ---
@@ -74,6 +75,22 @@ class GridFoodSearchEnv(MultiAgentEnv):
             if pos not in existing_positions:
                 return pos
 
+    def find_food(self, agent):
+        min_dist = float('inf')
+        closest_food_pos = None
+        ax, ay = agent.x, agent.y
+
+        for x in range(self.width):
+            for y in range(self.height):
+                tile = self.tiles[x][y]
+                if tile.has_food:
+                    dist = abs(ax - x) + abs(ay - y)
+                    if dist < min_dist:
+                        min_dist = dist
+                        closest_food_pos = (x, y)
+
+        return closest_food_pos
+
     def _get_observations(self):
         """Returns the observation dictionary for all agents."""
         obs = {}
@@ -85,8 +102,9 @@ class GridFoodSearchEnv(MultiAgentEnv):
 
             norm_ax = ax / (self.width - 1) if self.width > 1 else 0.0
             norm_ay = ay / (self.height - 1) if self.height > 1 else 0.0
-            norm_fx = 0.0
-            norm_fy = 0.0
+            fx, fy = self.find_food(agent) if self.find_food(agent) else (agent.x, agent.y)
+            norm_fx = fx / (self.width - 1) if self.width > 1 else 0.0
+            norm_fy = fy / (self.height - 1) if self.height > 1 else 0.0
 
             norm_agent_pos = np.array([norm_ax, norm_ay], dtype=np.float32)
             norm_food_pos = np.array([norm_fx, norm_fy], dtype=np.float32)
@@ -100,6 +118,8 @@ class GridFoodSearchEnv(MultiAgentEnv):
         return obs
 
     def reset(self, *, seed=None, options=None):
+        self.tiles = copy.deepcopy(self.original_tiles)
+
         for agent in self.my_agents.values():
             agent.reset()
             agent.x = random.randint(0, self.width - 1)
