@@ -15,23 +15,23 @@ ROCK = 2
 # Symbols for visualization
 TERRAIN_SYMBOLS = {
     GRASS: "🌿",
-    SAND: "🏖️",
+    SAND: "🏜️",
     ROCK: "⛰️",
 }
-
 
 def generate_terrain(width, height):
     """
     Generates a grid mostly filled with sand and rock,
     with small connected grass clusters.
+    Exactly 5 food items placed on grass tiles.
     """
     tiles = [[Tile() for _ in range(height)] for _ in range(width)]
 
-    # Step 1: Fill the map with sand and rock
+    # Step 1: Fill the map with sand and rock (no food yet)
     for x in range(width):
         for y in range(height):
             terrain = random.choice([SAND, ROCK])
-            tiles[x][y] = Tile(terrain=terrain, has_food=random.choice([True, False, False]))
+            tiles[x][y] = Tile(terrain=terrain, has_food=False)
 
     # Step 2: Create connected grass clusters
     def create_grass_cluster(center_x, center_y, size):
@@ -60,17 +60,31 @@ def generate_terrain(width, height):
         cluster_size = random.randint(5, 10)
         create_grass_cluster(cx, cy, cluster_size)
 
-    return tiles
+    # Step 4: Put food on exactly 5 random grass tiles
+    grass_tiles = [(x, y) for x in range(width) for y in range(height) if tiles[x][y].terrain == GRASS]
 
+    if len(grass_tiles) >= 5:
+        food_positions = random.sample(grass_tiles, 5)
+        for fx, fy in food_positions:
+            tiles[fx][fy].has_food = True
+    else:
+        print("⚠️ Warning: Not enough grass tiles to place 5 food items!")
+
+    return tiles
 
 if __name__ == "__main__":
     width, height = 10, 10
     terrain_grid = generate_terrain(width, height)
+
+    FOOD_SYMBOL = "🍎"
 
     print("Terrain map:\n")
     for y in range(height):
         row = ""
         for x in range(width):
             tile = terrain_grid[x][y]
-            row += TERRAIN_SYMBOLS[tile.terrain] + " "
+            if tile.has_food:
+                row += FOOD_SYMBOL + " "
+            else:
+                row += TERRAIN_SYMBOLS[tile.terrain] + " "
         print(row)
