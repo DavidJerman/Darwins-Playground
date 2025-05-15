@@ -303,8 +303,6 @@ Cilj za naslednji teden:
 
 #### Sprint 3
 
-Repozitorij: [Darwin's Playground](https://github.com/DavidJerman/Darwins-Playground)
-
 David Jerman:
 
 Ta teden sem dokončal vse kar sem si zadal za ta šprint:
@@ -342,3 +340,31 @@ simulira bolj realistično naravno okolje (npr. travnike).
 Vizualizacija:
 Končni rezultat je bil izpisan v ukazni vrstici, kjer vsak tip terena predstavlja določen emoji, kar omogoča hiter
 vizualni pregled nad razporeditvijo terena.
+
+#### Sprint 4
+
+Repozitorij: [Darwin's Playground](https://github.com/DavidJerman/Darwins-Playground/tree/feature/improved-env)
+
+David Jerman:
+
+Žal v zadnjem tednu kot tudi v okviru celotnega projekta niso bili doseženi vsi zadani cilji.
+
+Sem pa ta teden opravil naslednje:
+
+1. Implementiral novo generacijo terena v obstoječe okolje – okolje je zdaj bolj realistično in
+   zahtevno za navigacijo agenta.
+2. Poskusil implementirati inferenco in vizualizacijo naučenega modela.
+
+Pri točki 2 sem naletel na težave s prilagoditvijo dimenzij vhodnih podatkov. Čeprav sem modelu podal
+pet opazovanih lastnosti, je vhodni sloj pričakoval velikost 12, kar je povzročilo neusklajenost in
+napake pri inferenci. Poskusil sem ročno raztezanje podatkov, a brez uspeha, ker vhodni sloj ni bil
+usklajen z obliko podatkov. Zaradi pomanjkljive dokumentacije in kompleksnosti modela inferenca ni uspela.
+
+mplementacije najinega modela pa prav tako nisva uspešno dokončala, saj nama je zmanjkalo časa. Podcenila
+sva zahtevnost naloge za dve osebi, poleg tega pa je bila uporaba knjižnice RLLib zahtevnejša, kot sem
+pričakoval, predvsem zaradi nepopolne dokumentacije in aktivnega razvoja knjižnjice.
+
+Andraž Škof:
+
+Implementiral sem bolj napredno generacijo okolja, kjer se hrana in okolje ustvari bolj
+realistično.
