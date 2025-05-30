@@ -189,7 +189,7 @@ točko na zemljevidu, kjer je mogoče najti hrano ali vodo.
 
 Akcije (Actions): Vsaka žival lahko izvaja določene akcije, kot so premiki na sosednje točke v okolju.
 
-Nagrade (Rewards): Definiramo nagrade, ki jih agent prejme, ko pride do hrane ali vode. Na primer, pozitivna nagrada
+Nagrade (Rewards): Definiramo nagrade, ki jih agent prejme, ko pride do hrane ali vode. Na primer, pozitivna nagradah
 za dosego hrane ali vode, negativna za izgubo energije zaradi neuspešnega iskanja.
 
 Q-table: Zgradimo Q-table, ki hrani vrednosti Q(stanje, akcija) za vsako kombinacijo stanja in akcije. Ta tabela se
