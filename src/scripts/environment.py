@@ -67,6 +67,9 @@ class GridFoodSearchEnv(MultiAgentEnv):
     def get_tile(self, x, y):
         return self.tiles[x][y]
 
+    def get_tiles(self):
+        return self.tiles
+
     def _get_random_position(self, existing_positions=None):
         """Helper to get a random unoccupied position."""
         existing_positions = existing_positions or set()
@@ -102,7 +105,8 @@ class GridFoodSearchEnv(MultiAgentEnv):
 
             norm_ax = ax / (self.width - 1) if self.width > 1 else 0.0
             norm_ay = ay / (self.height - 1) if self.height > 1 else 0.0
-            fx, fy = self.find_food(agent) if self.find_food(agent) else (agent.x, agent.y)
+            closest = self.find_food(agent)
+            fx, fy = closest if closest else (agent.x, agent.y)
             norm_fx = fx / (self.width - 1) if self.width > 1 else 0.0
             norm_fy = fy / (self.height - 1) if self.height > 1 else 0.0
 
@@ -120,10 +124,12 @@ class GridFoodSearchEnv(MultiAgentEnv):
     def reset(self, *, seed=None, options=None):
         self.tiles = copy.deepcopy(self.original_tiles)
 
+        used = set()
         for agent in self.my_agents.values():
+            pos = self._get_random_position(used)
+            used.add(pos)
             agent.reset()
-            agent.x = random.randint(0, self.width - 1)
-            agent.y = random.randint(0, self.height - 1)
+            agent.x, agent.y = pos
 
         self._steps_taken = 0
 
@@ -144,17 +150,32 @@ class GridFoodSearchEnv(MultiAgentEnv):
             agent = self.my_agents[agent_id]
             tile = self.get_tile(agent.x, agent.y)
 
+            food_pos = self.find_food(agent)
+            if food_pos is None:
+                prev_dist = None
+            else:
+                prev_dist = abs(agent.x - food_pos[0]) + abs(agent.y - food_pos[1])
+
             agent.move(action, self.width, self.height, self.tiles)
+
+            if food_pos is None:
+                dist_reward = 0
+            else:
+                new_dist = abs(agent.x - food_pos[0]) + abs(agent.y - food_pos[1])
+                dist_reward = 1.0 if new_dist < prev_dist else -1.0
 
             if tile.has_food:
                 agent.heal(20)
                 tile.has_food = False
-                rewards[agent_id] += 10.0
+                rewards[agent_id] += 100.0
                 terminateds["__all__"] = True
                 infos[agent_id]["found_food"] = True
             else:
                 agent.take_damage(5)
                 rewards[agent_id] -= 0.1
+                rewards[agent_id] += dist_reward
+
+            agent.move(action, self.width, self.height, self.tiles)
 
         # Check for truncation (max steps)
         if self._steps_taken >= self._max_episode_steps:
