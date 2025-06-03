@@ -94,6 +94,14 @@ class GridFoodSearchEnv(MultiAgentEnv):
 
         return closest_food_pos
 
+    def return_food_positions(self):
+        positions = []
+        for x in range(self.width):
+            for y in range(self.height):
+                if self.tiles[x][y].has_food:
+                    positions.append((x, y))
+        return positions
+
     def _get_observations(self):
         """Returns the observation dictionary for all agents."""
         obs = {}

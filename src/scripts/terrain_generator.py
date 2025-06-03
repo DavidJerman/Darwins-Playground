@@ -69,20 +69,27 @@ def generate_terrain(_width, _height):
     return tiles
 
 
-def print_terrain(grid, _width, _height, agent_pos=None):
+def print_terrain(grid, _width, _height, agent_positions=None):
     food_symbol = "🍎"
+    agent_symbols = ["🤖", "👾", "🧠", "🎮", "🦾", "🐱", "🐶", "🐸", "🐼", "🦊"]
 
     print("Terrain map:\n")
     for y in range(_height):
         row = ""
         for x in range(_width):
-            tile = grid[x][y]
-            if agent_pos is not None and agent_pos[0] == x and agent_pos[1] == y:
-                row += "🤖 "
-            elif tile.has_food:
-                row += food_symbol + " "
-            else:
-                row += TERRAIN_SYMBOLS[tile.terrain] + " "
+            agent_here = False
+            if agent_positions:
+                for i, pos in enumerate(agent_positions):
+                    if pos[0] == x and pos[1] == y:
+                        row += agent_symbols[i % len(agent_symbols)] + " "
+                        agent_here = True
+                        break
+            if not agent_here:
+                tile = grid[x][y]
+                if tile.has_food:
+                    row += food_symbol + " "
+                else:
+                    row += TERRAIN_SYMBOLS[tile.terrain] + " "
         print(row)
 
 
