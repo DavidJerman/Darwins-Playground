@@ -208,3 +208,4 @@ Takšne nadgradnje bi lahko bistveno prispevale k izboljšanju učinkovitosti in
 6. [A Distributed Q-Learning Algorithm for Multi-Agent Team Coordination](https://ieeexplore.ieee.org/document/1526928),
 7. [Ray](https://docs.ray.io/en/latest/rllib/index.html).
 8. [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
+9. [Technical Note Q-Learning](https://d1wqtxts1xzle7.cloudfront.net/35466333/watkins92-libre.pdf?1415404402=&response-content-disposition=inline%3B+filename%3DTechnical_Note_Q_Learning.pdf&Expires=1749246889&Signature=ZwLdIPsptoA08mXLLribet5dXVov6vk~fOH7WPBDAAFUgdJ~--R9DHyohropEvf2S6rkBh20jC0xXSZZMp2~YFZYniH~jVj1cqhDkL~P-QZNwFCnFoXfoTS-KdNSCvq4Fn7LAx8eu-5mdYQJQebVMEtHOnF8FwMQr0zPV76vkGqOUIXwFXw1uxAE-iw2GNkf0Bg5j5Gc8MyRhuro52KCqjyLuue4ZqAF513Kh6EplMcFg4OhR0q2BFizSh-vYlroTG9aMlDZwQvUHzndZ-9snAeiSRZaejDi9bfiL7mT1c5GKn862ZJ63hwLfD5L8faebZpjcI4azJ1MSSyFDVb8sw__&Key-Pair-Id=APKAJLOHF5GGSLRBV4ZA)
