@@ -7,9 +7,9 @@
 
 1. Večagentni sistemi,
 2. Simulacija prilagajanja,
-3. Optimizacija strategij,
-4. Q-Learning,
-5. Učenje s krepitvijo.
+3. Q-Learning,
+4. Učenje s krepitvijo,
+5. CTDE.
 
 
 ## Povzetek
