@@ -14,46 +14,40 @@
 
 ## Povzetek
 
-Projekt razvija večagentni sistem, kjer so osnovne vrste bitij plenilci in žrtve (rastlinojedci).
-Glavni fokus je na žrtvah in njihovih preživetvenih strategijah v dinamičnem okolju, kjer morajo
-iskati hrano in vodo, ob tem pa se izogibati plenilcem.
+Projekt razvija večagentni sistem, osredotočen na žrtve (rastlinojedce) in njune preživetvene strategije v dinamičnem
+okolju, kjer morata iskati hrano in vodo ter se prilagajati različnim tipom terena, ki se skozi čas spreminjajo.
 
-Okolje je predstavljeno kot dvodimenzionalna mreža z različnimi tipi površin in viri, ki se skozi
-čas spreminjajo zaradi vremenskih in sezonskih dejavnikov. Agentom je na voljo le lokalno znanje
-pridobljeno z raziskovanjem in komunikacijo z drugimi agenti iste vrste.
+Jedro najine rešitve temelji na Q-učenju, nadgrajenem s pristopom CTDE (Centralized Training with Decentralized
+Execution), ki agentom omogoča med učno fazo izmenjavo informacij in znanja, medtem ko v realnem času delujejo
+neodvisno. S tem izboljšava koordinacijo in učinkovitost posameznih agentov in populacije kot celote.
 
-Agenti uporabljajo strategije Q-učenja, ki temeljijo na izmenjavi informacij za izboljšanje
-učinkovitosti populacije in posameznika. Pomembni so dejavniki, kot so energija, življenjske
-točke in shranjevanje informacij o okolju (lokacija virov, plenilcev).
+Okolje je predstavljeno kot dvodimenzionalna mreža z različnimi tipi površin in viri, ki se skozi čas spreminjajo.
+Agenti pridobivajo informacije z opazovanjem okolja in na podlagi tega sprejemajo odločitve.
 
-Končni cilj projekta je tako razviti večagentni sistem na osnovi Q-učenja, ki bo agentom
-omogočil uspešno navigacijo v okolju. Za implementacijo sva izbrala knjižnico RLLib in jezik
-Python. Za primerjalni algoritem pa sva izbrala algoritem PPO.
+Implementacija temelji na knjižnici RLLib in programskem jeziku Python. Za primerjavo učinkovitosti najinega Q-učenja
+s CTDE, sva uporabila algoritem PPO iz RLLib, ki je široko uporabljen in učinkovit pristop v večagentnem učenju.
 
 
 ## Uvod
 
-Večagentsko ojačitveno učenje (Multi-Agent Reinforcement Learning, MARL) predstavlja pomembno
-področje umetne inteligence, kjer več agentov sočasno uči in prilagaja svoja dejanja v dinamičnem
-okolju. V nasprotju z osnovnimi metodami ojačitvenega učenja, ki se osredotočajo na enega samega
-agenta, MARL naslavlja izzive sodelovanja, koordinacije in usklajevanja med agenti za dosego
-skupnega ali individualnega cilja.
+Večagentsko ojačitveno učenje (Multi-Agent Reinforcement Learning, MARL) predstavlja pomembno področje umetne
+inteligence, kjer se več agentov sočasno uči in prilagaja svoja dejanja v dinamičnem okolju. V nasprotju z osnovnimi
+metodami ojačitvenega učenja, ki se osredotočajo na enega samega agenta, MARL naslavlja izzive sodelovanja, koordinacije
+in usklajevanja med agenti za dosego skupnega ali individualnega cilja.
 
-Glavna prednost teh metod v primerjavi z osnovnimi metodami učenja s krepitvijo je kooperacija različnih 
-agentov za doseg cilja. Agenti lahko na podlagi lokalnega znanja in izmenjave informacij pridejo do konsenz 
-in sprejemajo boljše odločitve, ki bodo vodile v bolj uspešno raziskovanje okolja.
+Glavna prednost teh metod v primerjavi z osnovnimi pristopi je kooperacija različnih agentov za dosego cilja. Agenti
+lahko na podlagi lokalnega znanja in izmenjave informacij pridejo do konsenza in sprejemajo boljše odločitve, ki vodijo
+v uspešnejše raziskovanje okolja.
 
-V večagentskem ojačitvenem učenju je ključen izziv prilagajanje dejanj posameznega agenta dinamičnemu okolju
-izboljšanje celotne učinkovitosti sistema. Večina algoritmov predpostavlja, da agent pozna strukturo igre ali
-Nashovo ravnotežje ter da ima informacije o dejanjih in nagradah drugih agentov. Ker nagrade temeljijo tako na
-lastnih kot na dejanjih sodelujočih agentov, lahko MDP model ojačitvenega učenja obravnavamo kot večagentsko
-Markovljevo igro [5].
+V večagentskem ojačitvenem učenju je ključen izziv prilagajanje dejanj posameznega agenta dinamičnemu okolju ter
+izboljšanje celotne učinkovitosti sistema. Večina algoritmov predpostavlja, da agent pozna strukturo igre ali Nashovo
+ravnotežje ter da ima informacije o dejanjih in nagradah drugih agentov. Ker nagrade temeljijo tako na lastnih kot na
+dejanjih sodelujočih agentov, lahko MDP model ojačitvenega učenja obravnavava kot večagentsko Markovljevo igro [5].
 
-Pri učenju agenti uporabljajo strategije raziskovanja, kot sta ε-greedy in Boltzmanova eksploracija, saj na
-začetku nimajo zadostnega znanja o okolju. Zaradi omejenih izkušenj pogosto večkrat obiščejo ista stanja, kar
-postane problematično v večjih prostorskih stanjih. Ključen izziv pri sodelovalnih večagentskih sistemih je
-omogočanje izmenjave znanja med agenti. Predlagana optimizacijska metoda cikličnih poti omogoča izvleček
-optimalnih poti iz izkušenj, ki jih lahko agenti ali skupine delijo za hitrejšo konvergenco vrednostne funkcije [5].
+Pri učenju agenti uporabljajo strategije raziskovanja, kot sta ε-greedy in Boltzmannova eksploracija, saj na začetku
+nimajo zadostnega znanja o okolju. Zaradi omejenih izkušenj pogosto večkrat obiščejo ista stanja, kar postane
+problematično v večjih prostorskih stanjih. Ključen izziv pri sodelovalnih večagentskih sistemih je omogočanje izmenjave
+znanja med agenti [5].
 
 Prva izmed metod večagentnega učenja s krepitvijo je CTDE.
 Metoda CTDE (Centralised Training, Decentralised Execution) je splošna metoda, kjer učenje agentov poteka 
@@ -95,19 +89,18 @@ dinamičnem okolju [3].
 
 ## Sorodna dela
 
-Večina raziskav na področju večagentskega učenja s krepitvijo uporablja klasične algoritme, kot
-je Proximal Policy Optimization (PPO), kot osnovo za primerjave in razvoj novih metod. PPO je
-učinkovit in stabilen algoritem za samostojno učenje enega agenta v dinamičnih okoljih, vendar
-ni posebej zasnovan za kooperacijo med več agenti.
+Večina raziskav na področju večagentskega učenja s krepitvijo uporablja klasične algoritme, kot je Proximal Policy
+Optimization (PPO), kot osnovo za primerjave in razvoj novih metod. PPO je učinkovit in stabilen algoritem za učenje
+posameznega agenta v dinamičnih okoljih. Čeprav ga je mogoče uporabiti tudi v večagentskih okoljih, osnovna zasnova
+PPO ni posebej prilagojena za kooperacijo ali izmenjavo informacij med agenti [8].
 
-Zaradi narave večagentnih problemov, kjer mora vsak agent prilagajati svoje odločitve na podlagi
-vedenja drugih agentov, postanejo enostavni algoritmi, kot je PPO, manj učinkoviti. Zato so bile
-razvite metode, kot so HC-MARL in CTDE, ki omogočajo boljšo koordinacijo in delitev informacij
-med agenti, kar vodi do bolj uspešnega reševanja skupnih ciljev v kompleksnih okoljih. Eno izmed
-del, ki sva ga vzela za zgled, je delo št. 3 pod Viri. 
+Zaradi narave večagentnih problemov, kjer mora vsak agent prilagajati svoje odločitve na podlagi vedenja drugih agentov,
+postanejo enostavni algoritmi, kot je PPO, manj učinkoviti pri usklajevanju in sodelovanju med agenti. Zato so bile
+razvite metode, kot sta HC-MARL in CTDE, ki omogočata boljšo koordinacijo in delitev informacij med agenti, kar vodi
+do uspešnejšega reševanja skupnih ciljev v kompleksnih okoljih. Eno izmed del, ki sva ga vzela za zgled, je delo [3].
 
-V najinem delu uporabljava PPO kot osnovni primer primerjave, da izpostaviva prednosti večagentskih
-pristopov, predvsem na področju sodelovanja in konsenza med agenti.
+V najinem delu uporabljava PPO kot osnovni primer primerjave, da izpostaviva prednosti večagentskih pristopov, predvsem
+na področju sodelovanja in konsenza med agenti.
 
 
 ## Metodologija
@@ -116,9 +109,9 @@ V najinem projektu sva osredotočila na razvoj inteligentnih agentov (živali), 
 okolju učijo učinkovito iskati vire hrane in vode. Okolje je predstavljeno kot mreža točk, kjer
 so razporejeni ti viri, agenti pa se lahko med njimi premikajo.
 
-Okolje v katerem delujejo agenti je dvodimenzionalno in sestoji iz ploščic postavljenih v mrežo. Vsaka
+Okolje, v katerem delujejo agenti, je dvodimenzionalna mreža ploščic. Vsaka
 ploščica lahko predstavlja različen tip terena: travnik, pesek, gore, vodo, hrano itd. Gibanje agenta
-je na določenih ploščicah omejeno in agent se more tovrstnim polščicam izogibati.
+je na določenih ploščicah omejeno. Agent se mora takim ploščicam izogibati.
 
 Stanje agenta je predstavljeno z več lastnostmi, kot so življenje, pozicija, lakota itd. Agent se tako
 na podlagi svojega stanja in stanja okolja odloči za naslednjo akcijo: gibanje v prostoru v vse štiri
@@ -128,7 +121,7 @@ Agent za svoje akcije prejme nagrado ali pa kazen. Nagrado prejme vedno kadar na
 kaznovan pa je takrat, ko izgubi energijo zaradi neuspešnega iskanja. Pri tem je treba poudariti, da je
 kazen dosti manjša od same nagrade, saj bi sicer bila izguba prevelika.
 
-Za učenje uporabljava pristop Q-learning, ki agentom omogoča, da na podlagi nagrad in kazni postopoma
+Za učenje uporabljava pristop Q-učenje, ki agentom omogoča, da na podlagi nagrad in kazni postopoma
 izboljšujejo svojo politiko odločanja. Ključno pri tem je, da agenti poskušajo uravnotežiti
 raziskovanje neznanih poti in izkoriščanje že naučenih strategij.
 
@@ -140,42 +133,69 @@ informacijami.
 
 Pri implementaciji učenja in simulacije agentov uporabljava knjižnico RLLib, ki je del orodij za
 večagentno učenje in ponuja podporo za različne algoritme, kot je Proximal Policy Optimization (PPO).
-PPO bova uporabili kot primerjalni algoritem za oceno učinkovitosti najine Q-learning rešitve s CTDE
+PPO bova uporabili kot primerjalni algoritem za oceno učinkovitosti najinega Q-učenja s CTDE
 pristopom.
 
 Agenti komunicirajo z izmenjavo ključnih informacij o Q-vrednostih ali optimiziranih poteh, kar
 omogoča hitrejše prilagajanje okolju in večjo robustnost sistema.
 
-Uspešnost agenta sva ocenila z več metrikami: hitrost konvergence, povprečna nagrada skozi iteracije,
-delež uspešnih epizod skozi čas in dolžina poti do cilja.
+Za oceno uspešnosti sva uporabila več metrik: povprečna nagrada skozi čas, število korakov do najdbe hrane ter
+količino zaužite hrane.
 
 
 ## Poskusi in rezultati
 
-Vzpostavila sva osnovno simulacijsko okolje, kjer agenti izvajajo premike in zbirajo vire, kot
-sta hrana in voda. Za učenje in inferenco sva uporabili algoritme PPO iz knjižnice RLlib, ki omogoča
-učinkovito implementacijo in testiranje modelov za večagentno učenje.
+Vzpostavila sva osnovno simulacijsko okolje, kjer agenti izvajajo premike in zbirajo vire, kot sta hrana in voda. Za
+učenje in inferenco sva uporabila algoritem PPO iz knjižnice RLlib, ki omogoča učinkovito implementacijo in testiranje
+modelov za večagentno učenje.
 
-Z uporabo PPO sva izvedla začetne poskuse, ki so služili predvsem preverjanju funkcionalnosti okolja
-in pravilnosti interakcij agentov z okoljem. Ti poskusi so potrdili, da okolje deluje skladno z
-zastavljenimi pravili ter da agenti uspešno sprejemajo odločitve na podlagi prejetih nagrad.
+Z uporabo PPO sva izvedla začetne poskuse, ki so služili predvsem preverjanju funkcionalnosti okolja in pravilnosti
+interakcij agentov z okoljem. Ti poskusi so potrdili, da okolje deluje skladno z zastavljenimi pravili ter da agenti
+uspešno sprejemajo odločitve na podlagi prejetih nagrad.
 
-Podrobnejša analiza rezultatov, vključno z meritvami hitrosti konvergence, uspešnosti agentov in
-vpliva različnih nastavitev, bo izvedena po nadgradnji rešitve s komunikacijo med agenti.
+Najino Q-učenje s CTDE se je naučilo hitreje, kar kaže na učinkovito začetno prilagajanje agentov, vendar so bile
+nagrade precej bolj nihajoče in manj stabilne v primerjavi z algoritmom PPO, ki sicer uči počasneje, a doseže bolj
+stabilno in nekoliko višjo končno nagrado. To nakazuje, da ima najin pristop prednosti v hitrosti učenja, medtem ko
+PPO bolje zagotavlja stabilnost in zanesljivost.
 
-Nisva dokončali implementacije celotne rešitve, predvsem zaradi kompleksnosti problema in omejenih
-virov. Med drugim ni bilo izvedene komunikacije med agenti preko CTDE pristopa, prav tako nisva
-uspela narediti podrobnejše evalvacije in primerjav z drugimi algoritmi.
+Povprečna nagrada skozi čas za najin algoritem:
+
+![avg_reward_smooth](avg_reward_smooth.png)
+
+Povprečna nagrada skozi čas za algoritem PPO:
+
+![avg_reward_smooth_ppo](avg_reward_smooth_ppo.png)
+
+Razlika v stabilnosti nagrad med CTDE in PPO izhaja predvsem iz različnih principov učenja. PPO je politika-gradientni
+algoritem, ki optimizira politiko z zmernimi posodobitvami, kar preprečuje prevelike skoke v vrednostih in zagotavlja
+stabilnejše učenje. Najino Q-učenje s CTDE pa temelji na vrednostnem učenju z izmenjavo informacij med agenti, kar
+lahko vodi do hitrejšega prilagajanja, a tudi večjih nihanj, saj so posodobitve bolj odvisne od trenutnih izkušenj in
+komunikacije, ki še ni popolnoma implementirana ali optimizirana.
+
+Grafi, ki prikazujejo število korakov do najdene hrane in količino zaužite hrane, so na voljo samo za najino Q-učenje s
+CTDE, saj nisva posegla v notranje delovanje PPO in nisva zabeležila teh metrik zanj. Iz spodnjega grafa je razvidno, da
+je najin algoritem predvsem optimiziral število korakov, ki jih agent potrebuje, da doseže hrano.
+
+Število korakov pred odkrito hrano:
+
+![avg_steps_before_apple_smooth](avg_steps_before_apple_smooth.png)
 
 
 ## Zaključek
 
-Projekt je predstavljal ambiciozen pristop k večagentnemu učenju v dinamičnem okolju, kjer so bili
-načrtovani kompleksni mehanizmi sodelovanja agentov. Kljub nepopolni implementaciji sva vzpostavila
-stabilno simulacijsko okolje in izvedla začetne poskuse z uporabo PPO algoritma in knjižnice RLLib.
-Ta osnova omogoča nadaljnji razvoj in nadgradnjo, predvsem v smeri implementacije CTDE komunikacije
-in izboljšanja učinkovitosti agentov. Prihodnje delo bo usmerjeno v dokončanje manjkajočih komponent
-in poglobljeno evalvacijo, ki bo omogočila bolj celovito oceno prednosti večagentnih pristopov.
+Projekt je pokazal, da je večagentno učenje v simuliranem okolju izvedljivo, čeprav z določenimi omejitvami. 
+Vzpostavljena je stabilna osnova, kjer agenti zbirajo vire in se učijo z uporabo PPO algoritma iz knjižnice RLlib ter
+najinega Q-učenja s CTDE. Rezultati kažejo, da Q-učenje s CTDE omogoča hitrejše prilagajanje, a z bolj nihajočimi in
+manj stabilnimi nagradami v primerjavi s PPO, ki je počasnejši, a zanesljivejši.
+
+Za prihodnje delo bi bilo smiselno:
+- Nadgraditi okolje z večjo kompleksnostjo in dodatnimi parametri, ki bi vplivali na strategije agentov.
+- Izboljšati komunikacijo med agenti z razširjeno izmenjavo informacij, da bi povečali učinkovitost sodelovanja in
+  stabilnost učenja.
+- Razviti in preizkusiti dodatne večagentne algoritme, ki bi lahko izboljšali tako hitrost učenja kot stabilnost.
+- Izvesti poglobljeno evalvacijo različnih pristopov na bolj raznolikih in zahtevnejših scenarijih.
+
+Takšne nadgradnje bi lahko bistveno prispevale k izboljšanju učinkovitosti in robustnosti sistema v večagentnih okoljih.
 
 
 ## Viri
@@ -187,3 +207,4 @@ in poglobljeno evalvacijo, ki bo omogočila bolj celovito oceno prednosti večag
 5. [Collaborative multi-agent reinforcement learning based on experience propagation](https://ieeexplore.ieee.org/document/6587341),
 6. [A Distributed Q-Learning Algorithm for Multi-Agent Team Coordination](https://ieeexplore.ieee.org/document/1526928),
 7. [Ray](https://docs.ray.io/en/latest/rllib/index.html).
+8. [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
