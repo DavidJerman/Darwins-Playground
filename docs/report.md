@@ -189,7 +189,7 @@ točko na zemljevidu, kjer je mogoče najti hrano ali vodo.
 
 Akcije (Actions): Vsaka žival lahko izvaja določene akcije, kot so premiki na sosednje točke v okolju.
 
-Nagrade (Rewards): Definiramo nagrade, ki jih agent prejme, ko pride do hrane ali vode. Na primer, pozitivna nagrada
+Nagrade (Rewards): Definiramo nagrade, ki jih agent prejme, ko pride do hrane ali vode. Na primer, pozitivna nagradah
 za dosego hrane ali vode, negativna za izgubo energije zaradi neuspešnega iskanja.
 
 Q-table: Zgradimo Q-table, ki hrani vrednosti Q(stanje, akcija) za vsako kombinacijo stanja in akcije. Ta tabela se
@@ -271,3 +271,100 @@ bilo potrebno dodatno namestiti vse potrebne CUDA/CUD-nn knjižnice ter pravilno
 podpira zagon Q-learning-a na grafični kartici. Prav tako je bilo potrebno začetno okolje
 prilagoditi, da je kompatibilno s knjižnico RLlib. Nenazadnje pa sem se moral spoznati tudi s
 samo knjižnico, katere prej še nisem uporabljal.
+
+#### Sprint 2
+
+David Jerman:
+
+Kaj je bilo narejeno:
+
+- manši popravki,
+- analiza primerov PPO (algoritem na osnovi nevronskih mrež za več-agentni sistem - vsebovan v RLLib),
+- implementacija osnovnega okolja za PPO,
+- učenje, klasifikacija in vizualizacija s PPO za dano okolje.
+
+Kje sem naletel na težave:
+
+Ko sem želel PPO uporabiti v kombinaciji z najinim okoljem, sem naletel na več problemov:
+
+- manjkajoči algoritmi v RLLib - QDN sploh ni prisoten v najnovejši različici,
+- težave z delovanjem na Windows sistemu,
+- nazadnje sem rešitev prestavil v WSL2, namestil druge verzije knjižnjic in primeri so začeli delovati,
+- naletel pa sem tudi na problem, kjer v primeru, da uporabim bolj kompleksna opazovanja pri agentih (
+  torej da poleg lokacij opazujem še druge okoljske lastnosti), algoritem ponovno odpove. Za reševanje
+  tega problema sem ravno tako zapravil precej časa, a je dokumentacija na spletu slaba, napake, ki pa jih
+  dobim pa ne povejo nič uporabnega.
+
+Cilj za naslednji teden:
+
+- usposobiti celotno okolje za PPO,
+- nadgraditi okolje,
+- začeti z delom na najinem algoritmu (CTDE Q-Learning).
+
+#### Sprint 3
+
+David Jerman:
+
+Ta teden sem dokončal vse kar sem si zadal za ta šprint:
+
+1. Popravil sem agentovo opazovanje okolja. Zaradi pomanjkljive dokumentacije sem imel kar precej dela.
+   Agent zdaj lahko prejme različne podatke, kot so njegova pozicija, pozicija hrane, vrsta terena itd.
+   Glavna rešitev je bila uporaba konektorja, ki vhodne podatke zravna (flatten). Dodal sem tudi en sloj po meri.
+2. Odstranil sem stare datoteke in obstoječo kodo dokaj enostavno integriral v trenutno ogrodje, saj je bila
+   že prej narejena v skladu z RLLib.
+3. Izboljšal sem kompatibilnost s strojno in programsko opremo na različnih napravah. Algoritem zdaj uporabi CUDA,
+   če je na voljo, sicer pa preklopi na CPU. Uporabnik lahko z zastavico --device izbere želeno napravo.
+4. Dodal sem nekaj privzetih vrednosti za lažji zagon.
+5. Na koncu sem dodal še možnost uporabe različnih algoritmov (poleg PPO, ki ga uporabljava). Ti algoritmi še niso
+   v celoti podprti, saj imajo določene specifike, ki jih bo treba še implementirati.
+
+Andraž Škof:
+
+Ustvarili sem mrežo ploščic (ang. tiles), kjer vsaka ploščica predstavlja določen tip terena. V implementaciji
+sem vključil tri osnovne tipe terena:
+
+Trava (🌿)
+
+Pesek (🏜️)
+
+Skale (⛰️)
+
+Postopek generacije:
+Inicializacija terena:
+Na začetku je celotna mreža zapolnjena z naključno določenim peskom in skalami, nato pa se dodajo gruče trave.
+
+Povezane travnate površine:
+Trava ni več razporejena povsem naključno – pazili smo, da se pojavlja v povezanih skupinah po 5–10 ploščic, da
+simulira bolj realistično naravno okolje (npr. travnike).
+
+Vizualizacija:
+Končni rezultat je bil izpisan v ukazni vrstici, kjer vsak tip terena predstavlja določen emoji, kar omogoča hiter
+vizualni pregled nad razporeditvijo terena.
+
+#### Sprint 4
+
+Repozitorij: [Darwin's Playground](https://github.com/DavidJerman/Darwins-Playground/tree/feature/improved-env)
+
+David Jerman:
+
+Žal v zadnjem tednu kot tudi v okviru celotnega projekta niso bili doseženi vsi zadani cilji.
+
+Sem pa ta teden opravil naslednje:
+
+1. Implementiral novo generacijo terena v obstoječe okolje – okolje je zdaj bolj realistično in
+   zahtevno za navigacijo agenta.
+2. Poskusil implementirati inferenco in vizualizacijo naučenega modela.
+
+Pri točki 2 sem naletel na težave s prilagoditvijo dimenzij vhodnih podatkov. Čeprav sem modelu podal
+pet opazovanih lastnosti, je vhodni sloj pričakoval velikost 12, kar je povzročilo neusklajenost in
+napake pri inferenci. Poskusil sem ročno raztezanje podatkov, a brez uspeha, ker vhodni sloj ni bil
+usklajen z obliko podatkov. Zaradi pomanjkljive dokumentacije in kompleksnosti modela inferenca ni uspela.
+
+mplementacije najinega modela pa prav tako nisva uspešno dokončala, saj nama je zmanjkalo časa. Podcenila
+sva zahtevnost naloge za dve osebi, poleg tega pa je bila uporaba knjižnice RLLib zahtevnejša, kot sem
+pričakoval, predvsem zaradi nepopolne dokumentacije in aktivnega razvoja knjižnjice.
+
+Andraž Škof:
+
+Implementiral sem bolj napredno generacijo okolja, kjer se hrana in okolje ustvari bolj
+realistično.
