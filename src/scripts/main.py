@@ -14,7 +14,7 @@ from visualizer import visualize_policy
 
 parser = add_rllib_example_script_args(
     default_reward=10000,
-    default_iters=20,
+    default_iters=100,
     default_timesteps=100000
 )
 

@@ -1,4 +1,5 @@
 from statistics import mean
+
 import matplotlib
 import numpy as np
 
@@ -6,7 +7,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from environment import GridFoodSearchEnv
-from terrain_generator import print_terrain
 from ctde_q_agent import CTDEQLearningAgent
 
 env = GridFoodSearchEnv({"num_agents": 2, "width": 10, "height": 10})
@@ -15,7 +15,7 @@ env.set_render_mode("human")
 agents = {agent_id: CTDEQLearningAgent(agent_id, env.action_spaces[agent_id])
           for agent_id in env.agents}
 
-n_episodes = 5000
+n_episodes = 8000
 
 reward_history = {agent_id: [] for agent_id in env.agents}
 apples_eaten_history = {agent_id: [] for agent_id in env.agents}
@@ -86,7 +86,6 @@ for episode in range(n_episodes):
         print(f"Average Apples Eaten (last 100): {avg_apples}")
         print(f"Avg Steps Before Apple (last 100): {avg_steps}")
         agent_positions = [(env.my_agents[aid].x, env.my_agents[aid].y) for aid in env.agents]
-        print_terrain(env.tiles, env.width, env.height, agent_positions)
 
 avg_rewards = [
     sum(reward_history[aid][i] for aid in env.agents) / len(env.agents)
